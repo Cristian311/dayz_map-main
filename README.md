@@ -26,6 +26,21 @@ vanilla (copaci, stanci) - cazi prin harta. De aceea generatorul scrie cate un `
 (`<nume>_t_XX_YY_col.ybn`), care contine mesh-ul de coliziune al terenului plus coliziunile cladirilor
 care cad in acel tile, toate in coordonate mondiale. Coliziunea NU mai e pusa in `.ydr` (ar fi dubla).
 
+Capcana (rezolvata): compozitul **si** copiii BVH trebuie sa stea la 0,0,0, iar pozitia mondiala sa fie
+direct in vertecsi (regula din tutorialul Sollumz "Creating Static Collisions"). Daca BVH-ul e mutat prin
+transform, exportul scrie AABB-urile copiilor in spatiul local (in jurul lui 0,0,0) si jocul nu gaseste
+niciodata coliziunea la pozitia reala, desi bounding box-ul compozitului e corect si fisierul se incarca.
+
+## Harta pe radar si pe harta mare (minimap)
+
+Generatorul scrie si `minimap/<nume>_minimap.gfx` (un Scaleform/SWF care contine imaginea din
+`harta_preview.png`, latura = `minimap_px` din `map.json`, implicit 1024 px) plus `client/minimap.js`.
+Scriptul incarca overlay-ul cu `AddMinimapOverlay` si il aseaza in coordonate de joc cu
+`SetMinimapOverlayDisplay(id, origin_x, -(origin_y + size), 100*size/px, ...)`, deci imaginea apare exact
+peste harta, atat pe radar cat si pe harta mare din pauza. Ambele fisiere sunt declarate automat in
+`fxmanifest.lua` (`files` + `client_script`). Daca vrei alta imagine, inlocuieste PNG-ul in
+`dayzgen/preview.py` sau scrie `.gfx`-ul din orice imagine cu `dayzgen.minimap_swf.write_minimap_gfx`.
+
 ## Cerinte
 
 - Windows, Blender 4.2+ (testat pe 5.2).

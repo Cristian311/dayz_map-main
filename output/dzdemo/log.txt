@@ -112,3 +112,63 @@
 [17:04:24]      /tp 7464.0 -7536.0 10.9    (sau, dintr-un script client: SetEntityCoords(PlayerPedId(), 7464.0, -7536.0, 10.9, false, false, false, false))
 [17:04:24] Timp total: 18 s
 [17:04:24] === GATA ===
+[17:20:18] === DayZ map gen: preset=demo name=dzdemo size=1024m seed=211895657 ===
+[17:20:18] Texturi...
+[17:20:18]   textura dzdemo_grass: exista deja, sar peste
+[17:20:18]   textura dzdemo_dirt: exista deja, sar peste
+[17:20:18]   textura dzdemo_rock: exista deja, sar peste
+[17:20:18]   textura dzdemo_sand: exista deja, sar peste
+[17:20:18]   textura dzdemo_plaster: exista deja, sar peste
+[17:20:18]   textura dzdemo_wood: exista deja, sar peste
+[17:20:18]   textura dzdemo_brick: exista deja, sar peste
+[17:20:18]   textura dzdemo_rooftile: exista deja, sar peste
+[17:20:18]   textura dzdemo_metal: exista deja, sar peste
+[17:20:18]   textura dzdemo_window: exista deja, sar peste
+[17:20:18]   textura dzdemo_door: exista deja, sar peste
+[17:20:18] Generez lumea...
+[17:20:18]   relief: 257x257 vertecsi, inaltime max 59.2 m, uscat 73%
+[17:20:18]   sate: 2 -> Novaya(464,464), Stary(832,800)
+[17:20:18]   drumuri: 4 trasee, 468 esantioane
+[17:20:18]   cladiri: 15 in 2 sate
+[17:20:18]   campuri: 0
+[17:20:18]   straturi: iarba 73% pamant 1% stanca 2% nisip 24%
+[17:20:18]   vegetatie: 6510 copaci in padure, total props 8810
+[17:20:18]   props sat: 41
+[17:20:19]   previzualizare harta: C:\Users\40727\Desktop\3d\dayz_map-main\output\dzdemo\harta_preview.png
+[17:20:19] Construiesc scena Blender...
+[17:20:19]   activez bl_ext.user_default.sollumz ...
+[17:20:21]   cladiri: 4 arhetipuri
+[17:20:21]   tile-uri: 8/16
+[17:20:22]   tile-uri: 16/16
+[17:20:22]   coliziuni: 16 compozite .ybn (15 cladiri incluse)
+[17:20:22]   export Sollumz (gen8) -> C:\Users\40727\Desktop\3d\dayz_map-main\output\dzdemo\assets
+[17:20:27]   export OK: 20 fisiere .ydr, 16 fisiere .ybn
+[17:20:27] Export ytd / ytyp / ymap ...
+[17:20:27]   ytd: dzdemo_terrain (8 texturi)
+[17:20:27]   ytd: dzdemo_buildings (14 texturi)
+[17:20:27]   ytyp: dzdemo_types (20 arhetipuri)
+[17:20:28]   ymap: 16 chunk-uri, 8882 entitati
+[17:20:28]   ymap manual: dzdemo_custom (0 obiecte)
+[17:20:28]   editor: entities.json (8866 entitati) + chunks.json -> C:\Users\40727\Desktop\3d\dayz_map-main\output\dzdemo\editor
+[17:20:28] Impachetare...
+[17:20:28]   FiveM: C:\Users\40727\Desktop\3d\dayz_map-main\output\dzdemo\fivem\dzdemo
+[17:20:29]   scena salvata: C:\Users\40727\Desktop\3d\dayz_map-main\output\dzdemo\dzdemo.blend
+[17:20:29] Harta: dzdemo  (1024 x 1024 m, seed 211895657)
+[17:20:29] Pozitie in lumea GTA V: X 7000..8024, Y -8000..-6976
+[17:20:29] SPAWN (centrul satului Novaya): X=7464.0 Y=-7536.0 Z=10.9
+[17:20:29] 
+[17:20:29] Sate: Novaya (7464, -7536), Stary (7832, -7200)
+[17:20:29] Cladiri: 15   Props vanilla: 8851   Drumuri: 4
+[17:20:29] Tile-uri teren: 16   Chunk-uri ymap: 17
+[17:20:29] Coliziuni statice: 16 fisiere .ybn (fara ele nimic nu e solid in joc)
+[17:20:29] 
+[17:20:29] INSTALARE FiveM:
+[17:20:29]   1. copiaza folderul C:\Users\40727\Desktop\3d\dayz_map-main\output\dzdemo\fivem\dzdemo
+[17:20:29]      in resources/ (ex: C:\FXServer\server-data\resources\[rrp]\dzdemo)
+[17:20:29]   2. adauga in server.cfg:  ensure dzdemo
+[17:20:29]   3. RESTART COMPLET de server (nu doar 'refresh'/'restart resursa' - fisierele de streaming
+[17:20:29]      si coliziunile .ybn se incarca doar la pornirea serverului si a clientului),
+[17:20:29]      apoi intra in joc si da teleport la coordonatele de mai sus:
+[17:20:29]      /tp 7464.0 -7536.0 10.9    (sau, dintr-un script client: SetEntityCoords(PlayerPedId(), 7464.0, -7536.0, 10.9, false, false, false, false))
+[17:20:29] Timp total: 11 s
+[17:20:29] === GATA ===

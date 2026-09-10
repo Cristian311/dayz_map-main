@@ -15,4 +15,4 @@ INSTALARE FiveM:
      si coliziunile .ybn se incarca doar la pornirea serverului si a clientului),
      apoi intra in joc si da teleport la coordonatele de mai sus:
      /tp 7464.0 -7536.0 10.9    (sau, dintr-un script client: SetEntityCoords(PlayerPedId(), 7464.0, -7536.0, 10.9, false, false, false, false))
-Timp total: 18 s
+Timp total: 11 s

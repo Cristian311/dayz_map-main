@@ -215,20 +215,29 @@ class BlenderBuilder:
         obj.empty_display_size = 0
         obj.sollum_type = self.sz.SollumType.BOUND_COMPOSITE
         self.collection.objects.link(obj)
-        # transformul compozitului NU se scrie in .ybn; pozitiile mondiale stau in copii
+        # compozitul si copiii BVH stau la 0,0,0; pozitiile mondiale sunt in vertecsii mesh-urilor (vezi _add_bvh)
         obj.location = (0.0, 0.0, 0.0)
         return obj
 
     def _add_bvh(self, composite, name, mesh_col, world_pos, yaw=0.0):
-        """Un copil BOUND_GEOMETRYBVH pozitionat in lume, cu mesh-ul de coliziune in coordonate locale."""
-        poly = link_object(name, mesh_col, self.collection)
+        """
+        Un copil BOUND_GEOMETRYBVH la 0,0,0; mesh-ul de coliziune e COPIAT si mutat in coordonate mondiale.
+        Regula Sollumz (tutorial "Creating Static Collisions"): compozitul si BVH-urile stau la origine, doar
+        vertecsii poarta pozitia. Daca BVH-ul e pozitionat prin transform, exportul scrie AABB-urile copiilor
+        in spatiul local (in jurul lui 0,0,0) si jocul nu gaseste niciodata coliziunea la pozitia reala.
+        """
+        from mathutils import Matrix
+        me = mesh_col.copy()
+        me.name = f"{name}.colmesh"
+        me.transform(Matrix.Translation((float(world_pos[0]), float(world_pos[1]), float(world_pos[2])))
+                     @ Matrix.Rotation(float(yaw or 0.0), 4, "Z"))
+        me.update()
+        poly = link_object(name, me, self.collection)
         poly.location = (0.0, 0.0, 0.0)
         bvh = self.sz.bh.convert_obj_to_bvh(poly, bpy.context.scene.sz_default_flag_preset_name)
         bvh.name = f"{name}.bvh"
         bvh.parent = composite
-        bvh.location = (float(world_pos[0]), float(world_pos[1]), float(world_pos[2]))
-        if yaw:
-            bvh.rotation_euler = (0.0, 0.0, float(yaw))
+        bvh.location = (0.0, 0.0, 0.0)
         return bvh
 
     def build_collisions(self):

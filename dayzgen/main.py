@@ -73,12 +73,26 @@ def run(preset: str | None = "demo", out_root: str | None = None, gen9: bool | N
 
     # 3. lumea
     world = terrain.World(cfg, radii, log=log).generate()
+    preview_img = None
     try:
         from .preview import render_map_preview
-        render_map_preview(world, str(out / "harta_preview.png"))
+        preview_img = render_map_preview(world, str(out / "harta_preview.png"), size=int(cfg.minimap_px))
         log(f"  previzualizare harta: {out / 'harta_preview.png'}")
     except Exception as e:  # noqa
         log(f"  previzualizarea a esuat (nu e critica): {e!r}")
+
+    # aceeasi imagine, ca overlay Scaleform pentru radar + harta mare (AddMinimapOverlay in FiveM)
+    minimap_file = None
+    if preview_img is not None:
+        try:
+            from .minimap_swf import write_minimap_gfx
+            (out / "minimap").mkdir(exist_ok=True)
+            minimap_file = str(out / "minimap" / f"{cfg.name}_minimap.gfx")
+            write_minimap_gfx(preview_img, minimap_file)
+            log(f"  minimap overlay: {minimap_file}")
+        except Exception as e:  # noqa
+            log(f"  minimap-ul a esuat (nu e critic): {e!r}")
+            minimap_file = None
 
     # 4. Blender + Sollumz
     from . import blender_build, gta_export
@@ -119,7 +133,8 @@ def run(preset: str | None = "demo", out_root: str | None = None, gen9: bool | N
                                         editor_dir=str(edir))
         log("Impachetare...")
         pk_out = out if not gen9_flag else out / "gen9"
-        fivem = gta_export.package_fivem(cfg, str(adir), str(pk_out), ytyp_name, log=log, editor_dir=str(edir))
+        fivem = gta_export.package_fivem(cfg, str(adir), str(pk_out), ytyp_name, log=log, editor_dir=str(edir),
+                                         minimap_file=minimap_file)
         ragemp = None
         if cfg.package_ragemp:
             try:

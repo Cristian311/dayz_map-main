@@ -62,6 +62,7 @@ class MapConfig:
     package_ragemp: bool = False           # true = construieste si dlc.rpf (RAGE:MP); implicit doar FiveM
     keep_scene: bool = True                # pastreaza obiectele in scena (.blend) dupa export
     write_preview_png: bool = True         # scrie si PNG-uri ale texturilor pentru vizualizare
+    minimap_px: int = 1024                 # latura imaginii puse pe radar / harta mare (overlay .gfx), max 4096
 
     # --- cai (folosite de studio / exportul de obiecte manuale) ---
     fivem_resources_dir: str = r"C:\FXServer\server-data\resources\[rrp]"

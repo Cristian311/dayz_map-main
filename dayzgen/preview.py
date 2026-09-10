@@ -67,4 +67,4 @@ def render_map_preview(world, path: str, size: int = 1024):
         if p.name in C.VILLAGE_LANDMARKS:
             stamp(p.x, p.y, max(1, int(2 * s * 2)), np.array([0.95, 0.85, 0.10]))
     write_png(path, img)
-    return path
+    return img

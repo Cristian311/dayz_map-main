@@ -325,8 +325,44 @@ def _asset_files(asset_dir: str):
                   if p.suffix.lower() in (".ydr", ".ybn", ".ytd", ".ytyp", ".ymap"))
 
 
+def minimap_client_script(cfg: C.MapConfig, gfx_rel: str, w_px: int, h_px: int) -> str:
+    """Script client (JS) pus in resursa: incarca overlay-ul .gfx si il aseaza pe radar/harta mare."""
+    from .minimap_swf import overlay_display_args
+    x, y, sx, sy = overlay_display_args(cfg.origin_x, cfg.origin_y, cfg.size, w_px, h_px)
+    return f"""/* Harta {cfg.name} pe radar si pe harta mare (pauza): overlay Scaleform cu imaginea generata.
+   Generat de dayz_map_gen - nu edita de mana, se rescrie la fiecare generare. */
+const FILE = '{gfx_rel}';
+const X = {x:.1f}, Y = {y:.1f}, SCALE_X = {sx:.4f}, SCALE_Y = {sy:.4f};   // 100 = 1 px per metru
+let overlay = -1;
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function showOverlay() {{
+    // minimap-ul exista doar dupa ce jucatorul e in lume
+    while (!NetworkIsPlayerActive(PlayerId())) await wait(500);
+    overlay = AddMinimapOverlay(FILE);
+    const started = GetGameTimer();
+    while (!HasMinimapOverlayLoaded(overlay)) {{
+        if (GetGameTimer() - started > 60000) {{
+            console.log(`[{cfg.name}] overlay-ul de minimap nu s-a incarcat: ${{FILE}}`);
+            return;
+        }}
+        await wait(100);
+    }}
+    SetMinimapOverlayDisplay(overlay, X, Y, SCALE_X, SCALE_Y, 100.0);
+}}
+
+setTimeout(showOverlay, 1000);
+
+on('onResourceStop', (name) => {{
+    if (name !== GetCurrentResourceName() || overlay < 0) return;
+    if (typeof RemoveMinimapOverlay === 'function') RemoveMinimapOverlay(overlay);
+    else SetMinimapOverlayDisplay(overlay, X, Y, SCALE_X, SCALE_Y, 0.0);
+}});
+"""
+
+
 def package_fivem(cfg: C.MapConfig, asset_dir: str, out_dir: str, ytyp_name: str, log=print,
-                  editor_dir: str | None = None) -> str:
+                  editor_dir: str | None = None, minimap_file: str | None = None) -> str:
     res_dir = Path(out_dir) / "fivem" / cfg.name
     stream = res_dir / "stream"
     # pastram obiectele puse manual din editor, daca resursa a mai fost impachetata o data
@@ -347,6 +383,23 @@ def package_fivem(cfg: C.MapConfig, asset_dir: str, out_dir: str, ytyp_name: str
     nybn = sum(1 for f in _asset_files(asset_dir) if f.suffix.lower() == ".ybn")
     if nybn == 0:
         log("  ATENTIE: nu exista fisiere .ybn -> nimic nu va fi solid in joc!")
+
+    # overlay de minimap (radar + harta mare) + scriptul client care il aseaza in lume
+    minimap_lua = ""
+    if minimap_file and Path(minimap_file).is_file():
+        gfx_rel = f"minimap/{Path(minimap_file).name}"
+        (res_dir / "minimap").mkdir(exist_ok=True)
+        shutil.copy2(minimap_file, res_dir / gfx_rel)
+        px = int(cfg.minimap_px)
+        (res_dir / "client").mkdir(exist_ok=True)
+        (res_dir / "client" / "minimap.js").write_text(minimap_client_script(cfg, gfx_rel, px, px), encoding="utf-8")
+        minimap_lua = f"""
+-- harta pe radar / harta mare: overlay Scaleform (AddMinimapOverlay) + scriptul care il pozitioneaza
+files {{ '{gfx_rel}' }}
+client_script 'client/minimap.js'
+"""
+        log(f"  minimap: {gfx_rel} + client/minimap.js")
+
     manifest = f"""fx_version 'cerulean'
 game 'gta5'
 
@@ -357,7 +410,7 @@ this_is_a_map 'yes'
 
 -- arhetipurile custom (teren + cladiri) trebuie cerute explicit
 data_file 'DLC_ITYP_REQUEST' 'stream/{ytyp_name}.ytyp'
-"""
+{minimap_lua}"""
     (res_dir / "fxmanifest.lua").write_text(manifest, encoding="utf-8")
     log(f"  FiveM: {res_dir}")
     return str(res_dir)
