@@ -1,0 +1,18 @@
+Harta: dzdemo  (1024 x 1024 m, seed 211895657)
+Pozitie in lumea GTA V: X 7000..8024, Y -8000..-6976
+SPAWN (centrul satului Novaya): X=7464.0 Y=-7536.0 Z=10.9
+
+Sate: Novaya (7464, -7536), Stary (7832, -7200)
+Cladiri: 15   Props vanilla: 8851   Drumuri: 4
+Tile-uri teren: 16   Chunk-uri ymap: 17
+Coliziuni statice: 16 fisiere .ybn (fara ele nimic nu e solid in joc)
+
+INSTALARE FiveM:
+  1. copiaza folderul C:\Users\40727\Desktop\3d\dayz_map-main\output\dzdemo\fivem\dzdemo
+     in resources/ (ex: C:\FXServer\server-data\resources\[rrp]\dzdemo)
+  2. adauga in server.cfg:  ensure dzdemo
+  3. RESTART COMPLET de server (nu doar 'refresh'/'restart resursa' - fisierele de streaming
+     si coliziunile .ybn se incarca doar la pornirea serverului si a clientului),
+     apoi intra in joc si da teleport la coordonatele de mai sus:
+     /tp 7464.0 -7536.0 10.9    (sau, dintr-un script client: SetEntityCoords(PlayerPedId(), 7464.0, -7536.0, 10.9, false, false, false, false))
+Timp total: 18 s

@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: pymateria
+Version: 0.2.0
+Summary: Bindings for Materia library
+License-Expression: LicenseRef-Proprietary
+License-File: LICENSE.pdf
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+
+# PyMateria
+
+Python bindings for Materia library.
+

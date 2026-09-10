@@ -1,0 +1,25 @@
+Metadata-Version: 2.4
+Name: szio
+Version: 1.3.0.dev9
+Author: alexguirre
+Author-email: alexguirre <alexguirre.aa@gmail.com>
+License-Expression: MIT
+License-File: LICENSE
+Requires-Dist: numpy>=1.23.0
+Requires-Dist: pytest>=8.4.0 ; extra == 'test'
+Requires-Python: >=3.10
+Project-URL: homepage, https://sollumz.org/
+Project-URL: source, https://github.com/Sollumz/szio
+Project-URL: issues, https://github.com/Sollumz/szio/issues
+Provides-Extra: test
+Description-Content-Type: text/markdown
+
+# Sollumz I/O
+
+Library for importing and exporting RAGE asset files.
+
+## Installation
+
+```sh
+pip install szio
+```

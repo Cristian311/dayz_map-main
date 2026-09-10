@@ -1,0 +1,50 @@
+{
+  "preset": "demo",
+  "name": "dzdemo",
+  "seed": 1337,
+  "size": 1024.0,
+  "cell": 4.0,
+  "tile_size": 256.0,
+  "max_height": 110.0,
+  "sea_depth": 10.0,
+  "origin_x": 7000.0,
+  "origin_y": -8000.0,
+  "num_villages": 2,
+  "village_radius": [
+    70.0,
+    110.0
+  ],
+  "houses_per_village": [
+    7,
+    11
+  ],
+  "road_half_width": 3.2,
+  "fields_per_village": [
+    1,
+    2
+  ],
+  "forest_coverage": 0.42,
+  "tree_spacing": 6.0,
+  "lone_tree_area": 1400.0,
+  "bush_edge_area": 160.0,
+  "bush_open_area": 2600.0,
+  "rock_slope_area": 320.0,
+  "rock_open_area": 3500.0,
+  "forest_debris_area": 1600.0,
+  "lod_dist_terrain": 700.0,
+  "lod_dist_tree": 230.0,
+  "lod_dist_bush": 120.0,
+  "lod_dist_rock": 150.0,
+  "lod_dist_building": 350.0,
+  "lod_dist_small_prop": 90.0,
+  "terrain_tex_size": 1024,
+  "building_tex_size": 512,
+  "terrain_uv_scale": 6.0,
+  "chunk_size": 256.0,
+  "export_gen9": false,
+  "package_ragemp": false,
+  "keep_scene": true,
+  "write_preview_png": true,
+  "fivem_resources_dir": "C:\\FXServer\\server-data\\resources\\[rrp]",
+  "custom_objects_file": "editor/objects.json"
+}
