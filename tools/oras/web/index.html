@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<title>Editor de oras</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app" @contextmenu.prevent @click="closeMenus">
+  <!-- ================================================================ bara de meniuri (ca in editorul Eden) -->
+  <header class="menubar">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" class="logo"><path d="M3 21V9l5-3v15M8 21V4l6 3v14M14 21v-9l7-3v12M2 21h20"/></svg>
+      <span>Editor de oras</span>
+    </div>
+
+    <div class="menu" :class="{open: menu === 'fisier'}">
+      <button class="mbtn" @click.stop="toggleMenu('fisier')">Fisier</button>
+      <div class="dropdown" v-if="menu === 'fisier'" @click.stop>
+        <button @click="newPlan(); menu = null">Plan nou...</button>
+        <button @click="savePlan(true); menu = null">Salveaza <kbd>Ctrl+S</kbd></button>
+        <button @click="$refs.planFile.click(); menu = null">Importa un plan .json...</button>
+        <div class="sep"></div>
+        <button @click="$refs.imageFile.click(); menu = null">Imagine de fundal (harta, schita)...</button>
+        <button v-if="plan.fundal" @click="removeBackground(); menu = null">Scoate imaginea de fundal</button>
+        <div class="sep"></div>
+        <button :disabled="!lastFile && !info.blend" @click="openBlender(); menu = null">Deschide orasul in Blender</button>
+      </div>
+    </div>
+    <div class="menu" :class="{open: menu === 'vizualizare'}">
+      <button class="mbtn" @click.stop="toggleMenu('vizualizare')">Vizualizare</button>
+      <div class="dropdown" v-if="menu === 'vizualizare'" @click.stop>
+        <button @click="setView(!view3d); menu = null">{{ view3d ? 'Harta 2D' : 'Vedere 3D' }} <kbd>Tab</kbd></button>
+        <button @click="fitView(); menu = null">Vezi tot orasul <kbd>Home</kbd></button>
+        <div class="sep"></div>
+        <label class="check"><input type="checkbox" v-model="showRelief" @change="redraw"> Relieful (culori si curbe de nivel)</label>
+        <label class="check"><input type="checkbox" v-model="showFoot" @change="redraw"> Cladirile care se vor genera (gri)</label>
+        <label class="check"><input type="checkbox" v-model="showHelp"> Ajutorul uneltei, in stanga</label>
+        <label class="check" v-if="log.length"><input type="checkbox" v-model="showLog"> Consola de generare</label>
+      </div>
+    </div>
+    <div class="menu" :class="{open: menu === 'oras'}">
+      <button class="mbtn" @click.stop="toggleMenu('oras')">Oras</button>
+      <div class="dropdown" v-if="menu === 'oras'" @click.stop>
+        <button @click="rightTab = 'oras'; menu = null">Setarile orasului (texturi, uzura, pete...)</button>
+        <button @click="rightTab = 'joc'; menu = null">Pozitia in joc (FiveM)</button>
+        <button @click="rightTab = 'probleme'; menu = null">Probleme <b v-if="warnings.length" class="cnt">{{ warnings.length }}</b></button>
+        <div class="sep"></div>
+        <button :disabled="!analysis" @click="autoMarks(null, false); menu = null"
+                title="La intersectii: stop si STOP pe strada mai mica, sageti pe strazile cu 2+ benzi. Ce ai ales tu pe o strada ramane.">Marcaje automate pe toate strazile</button>
+        <button v-if="warnings.some(w => w.tip === 'unghi' || w.tip === 'incrucisare')" @click="fixAngles(); menu = null"
+                title="Curbeaza strazile care intra in acelasi nod sub 25 de grade si pune noduri unde doua strazi se taie">Repara unghiurile si incrucisarile</button>
+      </div>
+    </div>
+
+    <div class="plan-picker" title="Planurile din output/orase">
+      <svg viewBox="0 0 24 24"><path d="M4 5h6l2 2h8v12H4z"/></svg>
+      <select v-model="planName" @change="loadPlan(planName)">
+        <option v-for="p in plans" :value="p">{{ p }}</option>
+      </select>
+      <span class="save-state" :class="{dirty: dirty}" :title="dirty ? 'Se salveaza singur dupa 2 secunde' : 'Totul e salvat'">{{ dirty ? dirty + ' nesalvate' : 'salvat' }}</span>
+    </div>
+    <input ref="planFile" type="file" accept=".json,application/json" hidden @change="importPlan">
+    <input ref="imageFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden @change="importImage">
+
+    <span class="grow"></span>
+
+    <div class="segmented" title="Tab">
+      <button :class="{on: !view3d}" @click="setView(false)">2D</button>
+      <button :class="{on: view3d}" @click="setView(true)">3D</button>
+    </div>
+
+    <!-- un singur buton mare; restul (doar genereaza, doar export, de la zero) sub sageata -->
+    <div class="build" :class="{open: menu === 'build'}">
+      <button class="primary go" :disabled="generating" @click="sendToGame"
+              title="Genereaza doar ce ai schimbat si exporta doar modelele schimbate. In joc: /hartanoua (te deconecteaza cateva secunde) o incarca">
+        <i class="prog" v-if="generating" :style="{width: jobPct + '%'}"></i>
+        <span v-if="generating" class="spinner"></span>
+        <svg v-else viewBox="0 0 24 24"><path d="M5 12h12M13 6l6 6-6 6"/></svg>
+        <span class="lbl">{{ buildLabel() }}</span>
+        <kbd v-if="!generating && dirty">{{ dirty }}</kbd>
+      </button>
+      <button class="primary caret" @click.stop="toggleMenu('build')" title="Alte optiuni">&#9662;</button>
+      <div class="dropdown right" v-if="menu === 'build'" @click.stop>
+        <button :disabled="generating" @click="generate(); menu = null">Doar genereaza (Blender), fara joc</button>
+        <button :disabled="generating" @click="exportFivem(); menu = null">Doar exportul FiveM, din ultimul oras generat</button>
+        <button :disabled="!lastFile && !info.blend" @click="openBlender(); menu = null">Deschide in Blender</button>
+        <div class="sep"></div>
+        <label class="check" title="Refa tot orasul si toata resursa de la zero (mai lent). Altfel se reface doar ce ai schimbat.">
+          <input type="checkbox" v-model="fullGen"> Refa tot de la zero (mai lent)</label>
+        <button v-if="generating" class="danger" @click="stopJob(); menu = null">Opreste lucrarea</button>
+        <button v-if="log.length" @click="showLog = !showLog; menu = null">{{ showLog ? 'Ascunde consola' : 'Arata consola' }}</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================================================================ bara de unelte -->
+  <div class="toolrow">
+    <button v-for="t in visibleTools" :key="t.id" class="tool" :class="{on: tool === t.id}" @click="setTool(t.id)" :title="t.name + ' (' + t.key + ')'">
+      <svg viewBox="0 0 24 24"><path :d="t.icon"/></svg>
+      <span class="tool-name">{{ t.short }}</span>
+      <kbd>{{ t.key }}</kbd>
+    </button>
+    <span class="grow"></span>
+    <span class="toolrow-hint muted"><kbd>Ctrl</kbd><kbd>Z</kbd> anuleaza &middot; <kbd>Del</kbd> sterge selectia &middot; <kbd>Home</kbd> vezi tot</span>
+    <button class="ghost qm" :class="{on: showHelp}" @click="showHelp = !showHelp" title="Ajutor pentru unealta aleasa">?</button>
+  </div>
+
+  <!-- ================================================================ optiunile uneltei (stanga) -->
+  <aside class="sidebar">
+    <div class="panel-head">
+      <span class="dot live" :style="{background: toolColor}"></span>{{ currentTool.name }}
+    </div>
+    <div class="card help" v-if="showHelp">
+      <p v-for="(line, i) in toolHelp.split('\n')" :key="i">{{ line }}</p>
+    </div>
+
+    <div class="card" v-if="tool === 'road'">
+      <div class="section-title">Mod</div>
+      <div class="mode-grid">
+        <button v-for="m in roadModes" :key="m.id" class="mode" :class="{on: roadMode === m.id}" @click="setRoadMode(m.id)" :title="m.help">
+          <svg viewBox="0 0 24 24"><path :d="m.icon"/></svg><span>{{ m.name }}</span><kbd>{{ m.key }}</kbd>
+        </button>
+      </div>
+      <p class="note mode-help" v-if="showHelp">{{ roadModes.find(m => m.id === roadMode).help }}</p>
+
+      <div class="section-title spaced">Tip de strada</div>
+      <div class="road-card" v-for="(v, k) in allRoadTypes" :key="k" :class="{on: roadType === k}" @click="roadType = k">
+        <span class="road-swatch" :class="k" :style="roadSwatch(k)"></span>
+        <div class="grow"><b>{{ v }}</b><small>{{ roadWidth(k) }} m cu trotuarele</small></div>
+        <button v-if="plan.profile && plan.profile[k]" class="mini" @click.stop="editProfile(k)" title="Modifica tipul">&#9998;</button>
+      </div>
+      <button class="ghost wide" @click="editProfile(null)">+ Tip nou (benzi, trotuar, mediana)</button>
+
+      <div class="section-title spaced">Inaltimea strazii urmatoare</div>
+      <div class="stepper">
+        <button @click="zOff -= 1" title="PageDown">&minus;</button>
+        <span>{{ zOff > 0 ? '+' : '' }}{{ zOff }} m <small>{{ zOff >= 4 ? 'pod' : zOff <= -4 ? 'tunel' : zOff ? 'fata de teren' : 'pe teren' }}</small></span>
+        <button @click="zOff += 1" title="PageUp">+</button>
+      </div>
+      <p class="note" v-if="showHelp">0 = strada sta pe teren (o urca si o coboara singur). Peste +4 m iese pod, sub -4 m tunel.</p>
+
+      <label class="check"><input type="checkbox" v-model="snapAngle"> Lipire de unghi (15&deg;, 90&deg;)</label>
+      <label class="check"><input type="checkbox" v-model="snapGrid"> Grila de 5 m</label>
+    </div>
+
+    <div class="card" v-if="tool === 'zone'">
+      <div class="section-title">Zona</div>
+      <div class="choice" v-for="z in zones" :key="z.id" :class="{on: zoneType === z.id}" @click="zoneType = z.id">
+        <span class="dot" :style="{background: z.culoare}"></span>{{ z.nume }}
+      </div>
+    </div>
+
+    <div class="card" v-if="tool === 'area'">
+      <div class="section-title">Ce desenezi</div>
+      <div class="choice" v-for="a in areaTypes" :key="a.id" :class="{on: areaType === a.id}" @click="areaType = a.id">
+        <span class="dot" :style="{background: a.culoare}"></span>{{ a.nume }}
+      </div>
+      <p class="note" v-if="areaPts">{{ areaPts }} puncte &middot; Enter / dublu-click = gata, click dreapta = un punct inapoi</p>
+    </div>
+
+    <div class="card" v-if="tool === 'terrain'">
+      <div class="section-title">Pensula de teren</div>
+      <div class="mode-grid">
+        <button v-for="m in terrainModes" :key="m.id" class="mode" :class="{on: terrainMode === m.id}" @click="terrainMode = m.id" :title="m.help">
+          <svg viewBox="0 0 24 24"><path :d="m.icon"/></svg><span>{{ m.name }}</span><kbd>{{ m.key }}</kbd>
+        </button>
+      </div>
+      <p class="note">{{ (terrainModes.find(m => m.id === terrainMode) || {}).help }}</p>
+      <label>Marime <input type="range" min="10" max="200" step="5" v-model.number="terrainRadius"><b class="val">{{ terrainRadius }} m</b></label>
+      <label v-if="['deal', 'nivel', 'panta'].includes(terrainMode)">
+        {{ terrainMode === 'nivel' ? 'Nivelul' : terrainMode === 'deal' ? 'Inaltimea dealului' : 'Cat urca pana la B' }}
+        <span class="unit"><input type="number" step="0.5" min="0" v-model.number="terrainHeight">m</span></label>
+      <label v-else>Putere <input type="range" min="0.1" max="3" step="0.1" v-model.number="terrainStrength"><b class="val">{{ terrainStrength }}</b></label>
+      <label class="check"><input type="checkbox" v-model="showRelief" @change="redraw"> Arata relieful</label>
+    </div>
+
+    <div class="card" v-if="tool === 'brush'">
+      <div class="section-title">Ce pictezi</div>
+      <div class="choice" v-for="p in propSets" :key="p.id" :class="{on: brushSet === p.id}" @click="brushSet = p.id; brushModel = ''">
+        <span class="dot" :style="{background: p.culoare}"></span>{{ p.nume }}
+      </div>
+      <label>Model <select v-model="brushModel"><option value="">amestecat</option>
+        <option v-for="m in currentSet.m" :value="m">{{ m.replace('prop_', '') }}</option></select></label>
+      <div class="segmented wide">
+        <button :class="{on: brushMode === 'pensula'}" @click="brushMode = 'pensula'">Pensula</button>
+        <button :class="{on: brushMode === 'unul'}" @click="brushMode = 'unul'">Cate unul</button>
+      </div>
+      <label v-if="brushMode === 'pensula'">Marime <input type="range" min="3" max="60" step="1" v-model.number="brushRadius"><b class="val">{{ brushRadius }} m</b></label>
+      <label v-if="brushMode === 'pensula'">Desime <input type="range" min="0.3" max="3" step="0.1" v-model.number="brushDensity"><b class="val">{{ brushDensity }}</b></label>
+      <p class="note">Shift + tras = sterge. Cate unul: click pune, tragi ca sa-l rotesti.</p>
+    </div>
+
+    <div class="card" v-if="tool === 'building'">
+      <div class="section-title">Cladire generata</div>
+      <div class="choice" v-for="b in buildPresets" :key="b.id" :class="{on: buildPick && buildPick.id === b.id}" @click="pickBuilding(b)">
+        <span class="dot" :style="{background: '#c9a27a'}"></span>{{ b.nume }} <small class="muted">{{ b.p.latime }}&times;{{ b.p.adancime }} m, {{ b.p.etaje }} et.</small>
+      </div>
+      <div class="section-title spaced">Cladire din GTA</div>
+      <input type="search" class="search" v-model="gtaQuery" placeholder="cauta (house, shop, midrise...)" @focus="loadCatalog">
+      <div class="gta-list">
+        <div class="choice small" v-for="c in gtaResults" :key="c.m" :class="{on: buildPick && buildPick.m === c.m}" @click="pickGta(c)">
+          {{ c.m }} <small class="muted">{{ c.cat }} &middot; {{ c.w }}&times;{{ c.d }} m</small>
+        </div>
+      </div>
+      <p class="note">Se intoarce singura cu fata spre strada cea mai apropiata. Rotita = roteste (Shift = fara intoarcere automata).</p>
+    </div>
+
+    <div class="card" v-if="tool === 'bg' && plan.fundal">
+      <div class="section-title">Imagine de fundal</div>
+      <label>Centru X <input type="number" step="1" v-model.number="plan.fundal.x" @change="bgChanged"></label>
+      <label>Centru Y <input type="number" step="1" v-model.number="plan.fundal.y" @change="bgChanged"></label>
+      <label>Latime <span class="unit"><input type="number" step="10" v-model.number="plan.fundal.latime" @change="bgChanged">m</span></label>
+      <label>Rotire <span class="unit"><input type="number" step="1" v-model.number="plan.fundal.rotatie" @change="bgChanged">&deg;</span></label>
+      <label>Opacitate <input type="range" min="0.1" max="1" step="0.05" v-model.number="plan.fundal.opacitate" @input="bgChanged"></label>
+      <p class="note">Tragi imaginea la locul ei; rotita = mai mare / mai mica, Shift + rotita = roteste. Un cartier GTA are cam 600-1000 m.</p>
+      <button class="danger" @click="removeBackground">Scoate imaginea</button>
+    </div>
+
+    <div class="card empty-card" v-if="tool === 'select' || tool === 'curve' || tool === 'delete' || tool === 'height'">
+      <p class="note" v-if="tool === 'select'">Click pe o strada, un nod, un cvartal, o cladire sau un obiect: proprietatile lui apar in dreapta.
+        Tragi de noduri si de colturi ca sa le muti.</p>
+      <p class="note" v-else-if="tool === 'curve'">Tragi de o strada ca s-o indoi. Tragi de un punct de curba ca sa-l muti.</p>
+      <p class="note" v-else-if="tool === 'delete'">Click pe ce vrei sa stergi. Cu Selecteaza, tasta Delete face acelasi lucru.</p>
+      <p class="note" v-else>Rotita peste un nod il ridica / coboara (Shift = 0,1 m). Mai simplu: selecteaza nodul si foloseste +/- din dreapta.</p>
+    </div>
+  </aside>
+
+  <!-- ================================================================ harta -->
+  <main ref="main" class="stage">
+    <canvas ref="c2d" v-show="!view3d"
+            @mousedown="down" @mousemove="move" @mouseup="up" @wheel.prevent="wheel" @dblclick="finishChain(true)"></canvas>
+    <div ref="c3d" class="c3d" v-show="view3d"></div>
+
+    <div class="overlay bottom-right zoom">
+      <button @click="zoomBy(1.25)" title="Mareste">+</button>
+      <button @click="zoomBy(0.8)" title="Micsoreaza">&minus;</button>
+      <button @click="fitView" title="Vezi tot (Home)">
+        <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+    </div>
+    <div class="overlay bottom-center hint" v-if="view3d">Stanga = roteste &middot; Dreapta = muta &middot; Rotita = zoom</div>
+
+    <!-- fereastra de editat un tip de strada, peste harta -->
+    <div class="modal" v-if="profileEdit" @click.self="profileEdit = null">
+      <div class="dialog">
+        <div class="card-head">{{ profileEdit.id ? 'Tipul ' + profileEdit.nume : 'Tip nou de strada' }}</div>
+        <label>Nume <input type="text" v-model="profileEdit.nume"></label>
+        <label>Benzi pe sens <input type="number" min="1" max="4" v-model.number="profileEdit.benzi"></label>
+        <label>Latime banda <span class="unit"><input type="number" step="0.25" min="2.5" max="4.5" v-model.number="profileEdit.banda">m</span></label>
+        <label>Trotuar <span class="unit"><input type="number" step="0.5" min="1" max="8" v-model.number="profileEdit.trotuar">m</span></label>
+        <label>Mediana <span class="unit"><input type="number" step="0.5" min="0" max="12" v-model.number="profileEdit.mediana">m</span></label>
+        <label v-if="profileEdit.mediana > 0">Mediana din <select v-model="profileEdit.mediana_tip"><option value="iarba">iarba</option><option value="beton">beton</option></select></label>
+        <label>Stalpi la <span class="unit"><input type="number" step="2" min="0" max="80" v-model.number="profileEdit.stalpi">m</span></label>
+        <label class="check"><input type="checkbox" v-model="profileEdit.parcare"> Locuri de parcare pe margini</label>
+        <label class="check"><input type="checkbox" v-model="profileEdit.copaci"> Copaci pe trotuar</label>
+        <label class="check"><input type="checkbox" v-model="profileEdit.marcaj"> Marcaje</label>
+        <div class="profile-preview" :style="profilePreview(profileEdit)"></div>
+        <p class="note">Carosabil {{ profileWidth(profileEdit).toFixed(1) }} m, cu trotuarele {{ (profileWidth(profileEdit) + 2 * profileEdit.trotuar).toFixed(1) }} m.</p>
+        <div class="row">
+          <button class="primary small" @click="saveProfile">Salveaza</button>
+          <button class="ghost" @click="profileEdit = null">Renunta</button>
+          <span class="grow"></span>
+          <button v-if="profileEdit.id" class="danger" @click="deleteProfile(profileEdit.id)">Sterge tipul</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- consola de generare / export, ca un sertar jos -->
+    <div class="console" v-if="showLog && log.length">
+      <div class="console-head">
+        <span v-if="generating" class="spinner small"></span>
+        <b>{{ job && job.kind === 'export' ? 'Export FiveM' : job && job.kind === 'build' ? 'Trimit in joc' : 'Generare' }}</b>
+        <template v-if="job && (generating || job.stopped)">
+          <span class="muted">{{ jobPct }}% &middot; {{ job.stopped ? 'oprit' : job.stage }} &middot; a trecut {{ fmtTime(job.elapsed) }}<template v-if="generating && job.eta != null">, mai are cam {{ fmtTime(job.eta) }}</template></span>
+        </template>
+        <span class="grow"></span>
+        <button v-if="generating" class="mini danger" @click="stopJob">Opreste</button>
+        <button class="mini" @click="showLog = false" title="Ascunde (Vizualizare > Consola o aduce inapoi)">&#215;</button>
+      </div>
+      <div class="bar" v-if="job && (generating || job.stopped)"><div :class="{stopped: job.stopped}" :style="{width: jobPct + '%'}"></div></div>
+      <div class="terminal"><div v-for="(l, i) in log" :key="i" :class="{err: /Error|Traceback|Eroare/.test(l)}">{{ l }}</div></div>
+    </div>
+
+    <transition name="toast">
+      <div class="toast" v-if="toastOn">{{ status }}</div>
+    </transition>
+  </main>
+
+  <!-- ================================================================ proprietati (dreapta) -->
+  <aside class="inspector">
+    <div class="tabs">
+      <button :class="{on: rightTab === 'sel'}" @click="rightTab = 'sel'">Selectie</button>
+      <button :class="{on: rightTab === 'oras'}" @click="rightTab = 'oras'">Oras</button>
+      <button :class="{on: rightTab === 'joc'}" @click="rightTab = 'joc'">In joc</button>
+      <button :class="{on: rightTab === 'probleme', warn: warnings.length}" @click="rightTab = 'probleme'">Probleme <b v-if="warnings.length" class="cnt">{{ warnings.length }}</b></button>
+    </div>
+
+    <!-- ---------------------------------------------------------------- Selectie -->
+    <div class="tab-body" v-show="rightTab === 'sel'">
+      <div class="empty" v-if="!hasSel">
+        <svg viewBox="0 0 24 24"><path d="M5 3l13 8-6 1.5L9.5 19z"/></svg>
+        <p>Nimic selectat.</p>
+        <p class="note">Cu unealta Selecteaza dai click pe o strada, un nod, un cvartal, o cladire sau un obiect. Proprietatile lui apar aici.</p>
+      </div>
+
+      <div class="card" v-if="selNode">
+        <div class="card-head"><span class="badge node"></span>Intersectie / capat</div>
+        <div class="two">
+          <label>X <input type="number" step="1" v-model.number="selNode.x" @focus="snapshot" @change="changed"></label>
+          <label>Y <input type="number" step="1" v-model.number="selNode.y" @focus="snapshot" @change="changed"></label>
+        </div>
+        <div class="segmented wide">
+          <button :class="{on: selNode.auto}" @click="setNodeAuto(true)">Pe teren</button>
+          <button :class="{on: !selNode.auto}" @click="setNodeAuto(false)">Inaltime aleasa</button>
+        </div>
+        <label v-if="!selNode.auto">Inaltime <span class="unit"><input type="number" step="0.5" v-model.number="selNode.z" @focus="snapshot" @change="changed">m</span></label>
+        <div class="nudge" title="Ridica / coboara intersectia; strazile ei urca lin pana la vecine, terenul si cvartalele din jur se potrivesc singure">
+          <b>Ridica / coboara</b>
+          <button @click="nudgeNode(selNode, -1)">-1 m</button><button @click="nudgeNode(selNode, -0.5)">-0,5</button>
+          <button @click="nudgeNode(selNode, 0.5)">+0,5</button><button @click="nudgeNode(selNode, 1)">+1 m</button>
+        </div>
+        <p class="note good" v-if="selNode.auto && podZ(selNode) !== null">Nod de pod / tunel: inaltimea se calculeaza singura, acum
+          {{ podZ(selNode).toFixed(1) }} m.</p>
+        <p class="note" v-else-if="selNode.auto">Sta pe teren: {{ (selNode.z || 0).toFixed(1) }} m.</p>
+        <button class="danger" @click="deleteSel">Sterge nodul si strazile lui</button>
+      </div>
+
+      <div class="card" v-if="selRoad">
+        <div class="card-head"><span class="badge road"></span>Strada {{ selRoad.id }}
+          <span class="grow"></span>
+          <small class="muted" v-if="roadInfo">{{ roadInfo.L.toFixed(0) }} m &middot; <b :class="roadInfo.panta > plan.panta_max ? 'bad' : 'good'">{{ (roadInfo.panta * 100).toFixed(1) }}%</b></small>
+        </div>
+        <div class="subtabs">
+          <button :class="{on: roadTab === 'strada'}" @click="roadTab = 'strada'">Strada</button>
+          <button :class="{on: roadTab === 'inaltime'}" @click="roadTab = 'inaltime'">Inaltime</button>
+          <button :class="{on: roadTab === 'marcaje'}" @click="roadTab = 'marcaje'">Marcaje <i v-if="selRoad.marcaje" class="mark"></i></button>
+        </div>
+
+        <template v-if="roadTab === 'strada'">
+          <label>Tip <select v-model="selRoad.tip" @focus="snapshot" @change="changed">
+            <option v-for="(v, k) in allRoadTypes" :value="k">{{ v }}</option></select></label>
+          <div class="nudge" title="Schimba latimea reala a strazii: banda pastreaza latimea tipului (cel mult 3,5 m). Spre o strada mai ingusta se face o trecere lina.">
+            <b>Benzi pe sens: {{ roadLanes() }} <span class="muted">({{ roadLanes() * 2 }} in total)</span></b>
+            <button v-for="n in [1, 2, 3]" :key="'ln' + n" :class="{on: roadLanes() === n}" @click="setLanes(n)">{{ n }}</button>
+          </div>
+          <label>Nivel <select :value="selRoad.nivel || 'sol'" @focus="snapshot" @change="setRoadLevel($event.target.value)">
+            <option value="sol">la sol</option><option value="pod">pod (peste strazi, apa, vai)</option>
+            <option value="tunel">tunel (sub dealuri, sub strazi)</option></select></label>
+          <div class="kv" v-if="roadInfo">
+            <div><span>Lungime</span><b>{{ roadInfo.L.toFixed(0) }} m</b></div>
+            <div><span>Latime cu trotuare</span><b>{{ (2 * roadInfo.W).toFixed(1) }} m</b></div>
+            <div><span>Puncte de curba</span><b>{{ (selRoad.puncte || []).length }}</b></div>
+          </div>
+          <div class="row">
+            <button v-if="(selRoad.puncte || []).length" @click="straighten">Indreapta</button>
+            <button @click="autoMarks([selRoad.id], true)" title="Stop, STOP si sageti dupa intersectiile de la capete (peste ce e ales acum)">Marcaje automate</button>
+            <span class="grow"></span>
+            <button class="danger" @click="deleteSel">Sterge</button>
+          </div>
+        </template>
+
+        <template v-if="roadTab === 'inaltime'">
+          <div class="nudge" v-for="end in ['a', 'b']" :key="'h' + end">
+            <b>Capatul {{ end }}: {{ profNode(end) ? (+profNode(end).z || 0).toFixed(1) : '?' }} m</b>
+            <button @click="nudgeNode(profNode(end), -1)">-1</button><button @click="nudgeNode(profNode(end), -0.5)">-0,5</button>
+            <button @click="nudgeNode(profNode(end), 0.5)">+0,5</button><button @click="nudgeNode(profNode(end), 1)">+1</button>
+          </div>
+          <p class="note" v-if="roadGrade()">Panta acum: {{ roadGrade() }}%. Capetele a si b sunt scrise pe harta, langa strada.</p>
+          <div class="profile-chart" v-if="roadProfile" title="Strada vazuta din lateral: albastru = strada, verde = terenul">
+            <svg :viewBox="'0 0 240 90'" preserveAspectRatio="none">
+              <path :d="roadProfile.ground" class="pc-ground"/>
+              <path :d="roadProfile.road" class="pc-road"/>
+              <circle cx="4" :cy="roadProfile.ya" r="4" style="fill:#ffd24a;cursor:ns-resize" @mousedown.prevent="profDown('a', $event)"><title>Capatul a: trage in sus / jos (Shift = fin)</title></circle>
+              <circle cx="236" :cy="roadProfile.yb" r="4" style="fill:#ffd24a;cursor:ns-resize" @mousedown.prevent="profDown('b', $event)"><title>Capatul b: trage in sus / jos (Shift = fin)</title></circle>
+            </svg>
+            <div class="pc-labels"><span>{{ roadProfile.za }} m</span><span>{{ roadProfile.L }} m lungime</span><span>{{ roadProfile.zb }} m</span></div>
+          </div>
+          <p class="note" v-if="roadProfile">Trage de punctele galbene ca sa ridici sau cobori capetele (Shift = fin). La pod si tunel
+            inaltimile se calculeaza singure.</p>
+          <div class="row">
+            <button @click="flattenRoad" title="Capatul b la inaltimea capatului a">Fara panta</button>
+            <button v-if="roadProfile" @click="autoHeights" title="Capetele revin pe teren, iar la pod / tunel la inaltimea calculata">Inaltimi automate</button>
+          </div>
+        </template>
+
+        <template v-if="roadTab === 'marcaje'">
+          <label>Linia din mijloc <select :value="mk('centru', 'dubla')" @change="setMk('centru', $event.target.value)">
+            <option value="dubla">dubla galbena</option><option value="simpla">simpla</option>
+            <option value="intrerupta">intrerupta (se poate depasi)</option><option value="niciuna">fara</option></select></label>
+          <div class="two">
+            <label>Benzi spre b <input type="number" min="1" max="4" :value="mk('benzi.dr', roadLanes())" @change="setMk('benzi.dr', +$event.target.value)"></label>
+            <label>Benzi spre a <input type="number" min="1" max="4" :value="mk('benzi.st', roadLanes())" @change="setMk('benzi.st', +$event.target.value)"></label>
+          </div>
+          <label>Parcare pe margine <select :value="mk('parcare', '')" @change="setMk('parcare', $event.target.value)">
+            <option value="">ca tipul strazii</option><option value="niciuna">fara</option><option value="dr">dreapta (spre b)</option>
+            <option value="st">stanga (spre a)</option><option value="ambele">pe ambele parti</option></select></label>
+          <label title="Oblica: locuri la 45 de grade, 4.6 m; doar daca benzile raman de macar 2.75 m, altfel ramane paralela">
+            Locurile de parcare <select :value="mk('parcare_stil', '')" @change="setMk('parcare_stil', $event.target.value)">
+            <option value="">paralele</option><option value="oblica">oblice (in unghi)</option></select></label>
+          <label title="Banda de langa trotuar: linie alba plina si BUS scris din 60 in 60 m">
+            Banda de autobuz <select :value="mk('bus', '')" @change="setMk('bus', $event.target.value)">
+            <option value="">fara</option><option value="dr">dreapta (spre b)</option><option value="st">stanga (spre a)</option>
+            <option value="ambele">pe ambele sensuri</option></select></label>
+          <div class="two">
+            <label>Bordura dreapta <select :value="mk('bordura.dr', '')" @change="setMk('bordura.dr', $event.target.value)">
+              <option value="">normala</option><option value="rosie">rosie</option><option value="galbena">galbena</option></select></label>
+            <label>Bordura stanga <select :value="mk('bordura.st', '')" @change="setMk('bordura.st', $event.target.value)">
+              <option value="">normala</option><option value="rosie">rosie</option><option value="galbena">galbena</option></select></label>
+          </div>
+          <label>Uzura asfaltului <select :value="mk('uzura', '')" @change="setMk('uzura', $event.target.value)">
+            <option value="">ca orasul</option><option value="niciuna">fara (asfalt nou)</option><option value="putina">putina</option>
+            <option value="normala">normala</option><option value="multa">multa (fisuri, petice, pete)</option></select></label>
+          <div class="ends">
+            <div class="mk-end" v-for="end in ['a', 'b']" :key="end">
+              <b>Capatul {{ end }}</b>
+              <label class="check"><input type="checkbox" :checked="mk('stop.' + end, false)" @change="setMk('stop.' + end, $event.target.checked)"> linie de stop</label>
+              <label>Trecere <select :value="mk('zebra.' + end, '')" @change="setMk('zebra.' + end, $event.target.value)">
+                <option value="">automat</option><option value="zebra">zebra</option>
+                <option value="linii">doua linii</option><option value="niciuna">fara</option></select></label>
+              <label>Sageti <select :value="mk('viraj.' + end, '')" @change="setMk('viraj.' + end, $event.target.value)">
+                <option value="">fara</option><option value="fata">inainte</option><option value="stanga">stanga</option>
+                <option value="dreapta">dreapta</option><option value="banda">pe benzi</option></select></label>
+              <label>Scris <select :value="mk('scris.' + end, '')" @change="setMk('scris.' + end, $event.target.value)">
+                <option value="">fara</option><option value="STOP">STOP</option><option value="SLOW">SLOW</option>
+                <option value="BUS">BUS</option></select></label>
+            </div>
+          </div>
+          <p class="note">Capetele a si b sunt scrise pe harta langa strada. Marcajele se vad pe harta cand te apropii; la trecerile de pietoni bordura se coboara singura.</p>
+          <div class="row">
+            <button @click="autoMarks([selRoad.id], true)" title="Stop, STOP si sageti dupa intersectiile de la capete (peste ce e ales acum)">Marcaje automate</button>
+            <button v-if="selRoad.marcaje" @click="resetMarks">Ca tipul strazii</button>
+          </div>
+        </template>
+      </div>
+
+      <div class="card" v-if="selZone">
+        <div class="card-head"><span class="dot" :style="{background: zoneColor(selZone.tip)}"></span>Zona</div>
+        <label>Tip <select v-model="selZone.tip" @focus="snapshot" @change="changed">
+          <option v-for="z in zones" :value="z.id">{{ z.nume }}</option></select></label>
+        <label>Pete pe iarba <select :value="selZone.pete || ''" @change="setOpt(selZone, 'pete', $event.target.value)">
+          <option value="">ca orasul</option><option value="niciuna">fara</option><option value="putina">putine</option>
+          <option value="normala">normale</option><option value="multa">multe</option></select></label>
+        <label>Murdarie pe cladiri <select :value="selZone.murdarie || ''" @change="setOpt(selZone, 'murdarie', $event.target.value)">
+          <option value="">ca orasul</option><option value="niciuna">fara</option><option value="putina">putina</option>
+          <option value="normala">normala</option><option value="multa">multa</option></select></label>
+        <label v-if="['lc_caramida', 'centru', 'proiecte'].includes(selZone.tip)" title="Blocurile din zona: cu vitrine, firme si copertine la parter, sau simple (ferestre si usa)">Magazine la parter
+          <select :value="selZone.magazine || ''" @change="setOpt(selZone, 'magazine', $event.target.value)">
+            <option value="">ca tipul zonei</option><option value="niciunul">niciunul (blocuri simple)</option>
+            <option value="unele">la unele blocuri</option><option value="toate">la toate blocurile</option></select></label>
+        <label v-if="selZone.tip === 'parc'" title="Aleile parcului: le face generatorul (alee pe contur, alei curbe, piateta) sau raman doar cararile tale, puse in joc cu unealta Carare (P) din /mapeditor">Poteci
+          <select :value="selZone.poteci || ''" @change="setOpt(selZone, 'poteci', $event.target.value)">
+            <option value="">le face generatorul</option><option value="manual">le fac eu (Carare, in joc)</option></select></label>
+        <button class="danger" @click="deleteSel">Sterge zona</button>
+      </div>
+
+      <div class="card" v-if="selArea">
+        <div class="card-head"><span class="dot" :style="{background: areaColor(selArea.tip)}"></span>Suprafata</div>
+        <label>Tip <select v-model="selArea.tip" @focus="snapshot" @change="changed">
+          <option v-for="a in areaTypes" :value="a.id">{{ a.nume }}</option></select></label>
+        <label v-if="selArea.tip === 'apa'" title="Cum arata marginea apei">Mal
+          <select :value="selArea.mal || 'chei'" @change="snapshot(); $set(selArea, 'mal', $event.target.value); changed()">
+            <option value="chei">chei de beton (port, canal)</option><option value="plaja">plaja (nisip care intra lin in apa)</option>
+            <option value="natural">natural (mal cu iarba, in panta)</option></select></label>
+        <label v-if="selArea.tip === 'apa'" title="Lac / rau: apa sta la nivelul celui mai jos punct al malului, cu bazin de 3 m (in joc se poate inota). La nivelul marii: apa e marea GTA, deci la joc.z m sub oras (port, coasta).">Nivel
+          <select :value="selArea.nivel || ''" @change="setOpt(selArea, 'nivel', $event.target.value)">
+            <option value="">la nivelul solului (lac, rau)</option><option value="mare">la nivelul marii (port, coasta)</option></select></label>
+        <label v-if="selArea.tip === 'parc'" title="Aleile parcului: le face generatorul (alee pe contur, alei curbe, piateta) sau raman doar cararile tale, puse in joc cu unealta Carare (P) din /mapeditor">Poteci
+          <select :value="selArea.poteci || ''" @change="setOpt(selArea, 'poteci', $event.target.value)">
+            <option value="">le face generatorul</option><option value="manual">le fac eu (Carare, in joc)</option></select></label>
+        <p class="note" v-if="['plaja', 'camp', 'padure'].includes(selArea.tip)">Natura se pune oriunde, si departe de
+          strazi: harta se intinde pana la ea. Relieful de sub ea il faci cu unealta Teren (T).</p>
+        <div class="kv"><div><span>Suprafata</span><b>{{ polyArea(selArea.puncte).toFixed(0) }} m&sup2;</b></div>
+          <div><span>Colturi</span><b>{{ selArea.puncte.length }}</b></div></div>
+        <p class="note">Tragi de colturi cu Selecteaza. Parcul, parcarea, terenul de sport si zonele de cladiri stau in cvartalul lor; apa poate fi oriunde.</p>
+        <button class="danger" @click="deleteSel">Sterge suprafata</button>
+      </div>
+
+      <div class="card" v-if="selBuilding">
+        <div class="card-head"><span class="badge img"></span>{{ selBuilding.tip === 'gta' ? selBuilding.m : 'Cladire generata' }}</div>
+        <template v-if="selBuilding.tip !== 'gta'">
+          <label>Tip <select v-model="selBuilding.p.tip" @focus="snapshot" @change="changed">
+            <option v-for="t in ['bloc', 'casa', 'vila', 'magazin', 'hala', 'turn']" :value="t">{{ t }}</option></select></label>
+          <div class="two">
+            <label>Latime <span class="unit"><input type="number" step="1" min="6" v-model.number="selBuilding.p.latime" @focus="snapshot" @change="changed">m</span></label>
+            <label>Adancime <span class="unit"><input type="number" step="1" min="6" v-model.number="selBuilding.p.adancime" @focus="snapshot" @change="changed">m</span></label>
+          </div>
+          <label>Etaje <input type="number" step="1" min="1" max="40" v-model.number="selBuilding.p.etaje" @focus="snapshot" @change="changed"></label>
+          <label class="check"><input type="checkbox" v-model="selBuilding.p.comercial" @change="snapshot(); changed()"> Magazine la parter</label>
+        </template>
+        <label>Rotire <span class="unit"><input type="number" step="15" v-model.number="selBuilding.r" @focus="snapshot" @change="changed">&deg;</span></label>
+        <button class="danger" @click="deleteSel">Sterge cladirea</button>
+      </div>
+
+      <div class="card" v-if="selGen">
+        <div class="card-head"><span class="badge img"></span>Cladire generata automat</div>
+        <p class="hint">{{ selGen.tip }} · {{ selGen.w }}×{{ selGen.d }} m · {{ selGen.etaje }} et. Asa o va pune generatorul:
+          o poti scoate (nu se mai pune) sau face a ta, ca s-o muti si s-o schimbi. Restul cvartalului ramane la fel.</p>
+        <template v-if="!selGenRemoved">
+          <div class="row">
+            <button @click="genEditable">Fa-o editabila</button>
+            <button class="danger" @click="genRemove">Sterge</button>
+          </div>
+        </template>
+        <template v-else>
+          <p class="hint">Stearsa: dispare la urmatoarea generare.</p>
+          <button @click="genRestore">Pune-o inapoi</button>
+        </template>
+      </div>
+
+      <div class="card" v-if="selProp">
+        <div class="card-head"><span class="dot" :style="{background: propColor(selProp.m)}"></span>{{ selProp.m }}</div>
+        <label>Rotire <span class="unit"><input type="number" step="15" v-model.number="selProp.r" @focus="snapshot" @change="changed">&deg;</span></label>
+        <button class="danger" @click="deleteSel">Sterge</button>
+      </div>
+
+      <div class="card" v-if="selAlt">
+        <div class="card-head"><span class="badge alt"></span>Punct de altitudine</div>
+        <label>Inaltime <span class="unit"><input type="number" step="1" v-model.number="selAlt.z" @focus="snapshot" @change="changed">m</span></label>
+        <button class="danger" @click="deleteSel">Sterge punctul</button>
+      </div>
+
+      <div class="card" v-if="selBlock">
+        <div class="card-head"><span class="dot" :style="{background: zoneColor(selBlock.zona)}"></span>Cvartal</div>
+        <div class="kv">
+          <div><span>Zona</span><b>{{ zoneName(selBlock.zona) }}</b></div>
+          <div><span>Suprafata</span><b>{{ selBlock.arie.toFixed(0) }} m&sup2;</b></div>
+        </div>
+        <p class="note bad" v-if="!selBlock.valid">Prea mic sau cu forma imposibila: ramane curte.</p>
+        <template v-else>
+          <label>Pete pe iarba <select :value="blockOpt('pete')" @change="setBlockOpt('pete', $event.target.value)">
+            <option value="">ca orasul</option><option value="niciuna">fara</option><option value="putina">putine</option>
+            <option value="normala">normale</option><option value="multa">multe</option></select></label>
+          <label>Murdarie pe cladiri <select :value="blockOpt('murdarie')" @change="setBlockOpt('murdarie', $event.target.value)">
+            <option value="">ca orasul</option><option value="niciuna">fara</option><option value="putina">putina</option>
+            <option value="normala">normala</option><option value="multa">multa</option></select></label>
+          <label v-if="['lc_caramida', 'centru', 'proiecte'].includes(selBlock.zona)" title="Blocurile din cvartal: cu vitrine, firme si copertine la parter, sau simple (ferestre si usa)">Magazine la parter
+            <select :value="blockOpt('magazine')" @change="setBlockOpt('magazine', $event.target.value)">
+              <option value="">ca zona</option><option value="niciunul">niciunul (blocuri simple)</option>
+              <option value="unele">la unele blocuri</option><option value="toate">la toate blocurile</option></select></label>
+          <label v-if="selBlock.zona === 'parc' && !selBlock.liber" title="Aleile parcului: le face generatorul (alee pe contur, alei curbe, piateta) sau raman doar cararile tale, puse in joc cu unealta Carare (P) din /mapeditor">Poteci
+            <select :value="blockOpt('poteci')" @change="setBlockOpt('poteci', $event.target.value)">
+              <option value="">le face generatorul</option><option value="manual">le fac eu (Carare, in joc)</option></select></label>
+        </template>
+        <p class="note">Zona cvartalului o schimbi cu unealta Zona (Z): click in cvartal.</p>
+      </div>
+    </div>
+
+    <!-- ---------------------------------------------------------------- Oras -->
+    <div class="tab-body" v-show="rightTab === 'oras'">
+      <div class="stats" v-if="analysis">
+        <div class="stat"><b>{{ plan.roads.length }}</b><span>strazi</span></div>
+        <div class="stat"><b>{{ Object.keys(analysis.junctions).length }}</b><span>intersectii</span></div>
+        <div class="stat"><b>{{ analysis.blocks.filter(b => b.valid).length }}</b><span>cvartale</span></div>
+        <div class="stat" :class="{warn: warnings.length}" @click="rightTab = 'probleme'" style="cursor:pointer"><b>{{ warnings.length }}</b><span>probleme</span></div>
+      </div>
+      <div class="card">
+        <div class="card-head">Setarile orasului</div>
+        <label>Seed <input type="number" v-model.number="plan.seed" @focus="snapshot" @change="changed"></label>
+        <label>Texturi <select v-model="plan.texturi" @change="changed"><option value="gta">GTA</option><option value="simple">simple</option></select></label>
+        <label>Zona implicita <select v-model="plan.zona_implicita" @change="changed">
+          <option v-for="z in zones" :value="z.id">{{ z.nume }}</option></select></label>
+        <label>Panta maxima <span class="unit"><input type="number" step="1" :value="Math.round(plan.panta_max * 100)"
+               @focus="snapshot" @change="plan.panta_max = $event.target.value / 100; changed()">%</span></label>
+      </div>
+      <div class="card">
+        <div class="card-head">Aspect (doar cu texturi GTA)</div>
+        <label title="Fisuri, petice, pete de ulei, capace de canal pe asfalt. Fiecare strada poate avea alta, din Marcaje.">
+          Uzura asfaltului <select :value="plan.uzura || 'normala'" @change="$set(plan, 'uzura', $event.target.value); changed()">
+          <option value="niciuna">fara</option><option value="putina">putina</option><option value="normala">normala</option>
+          <option value="multa">multa</option></select></label>
+        <label title="Pete de pamant, frunze si urme pe iarba din curti, parcuri si gazon. Fiecare cvartal poate avea alta: click pe el.">
+          Pete pe iarba <select :value="plan.pete || 'normala'" @change="snapshot(); $set(plan, 'pete', $event.target.value); changed()">
+          <option value="niciuna">fara</option><option value="putina">putine</option><option value="normala">normale</option>
+          <option value="multa">multe</option></select></label>
+        <label title="Dare de apa sub ferestre si sub streasina, murdarie la baza peretilor. Fiecare cvartal poate avea alta: click pe el.">
+          Murdarie pe cladiri <select :value="plan.murdarie || 'normala'" @change="snapshot(); $set(plan, 'murdarie', $event.target.value); changed()">
+          <option value="niciuna">fara</option><option value="putina">putina</option><option value="normala">normala</option>
+          <option value="multa">multa</option></select></label>
+        <label class="check"><input type="checkbox" :checked="plan.mobilier !== false" @change="snapshot(); $set(plan, 'mobilier', $event.target.checked); changed()"> Mobilier stradal automat (stalpi, semafoare, hidranti)</label>
+        <label class="check" title="Ca terenul din GTA: pe iarba apar in pete mari, fara margini, alta iarba, pamant si frunze">
+          <input type="checkbox" :checked="plan.iarba_amestec !== false" @change="snapshot(); $set(plan, 'iarba_amestec', $event.target.checked); changed()"> Iarba amestecata (alta iarba, pamant, frunze)</label>
+        <button class="wide" @click="autoMarks(null, false)" :disabled="!analysis"
+                title="La intersectii: stop si STOP pe strada mai mica, sageti pe strazile cu 2+ benzi. Ce ai ales tu pe o strada ramane.">Marcaje automate pe toate strazile</button>
+      </div>
+    </div>
+
+    <!-- ---------------------------------------------------------------- In joc -->
+    <div class="tab-body" v-show="rightTab === 'joc'">
+      <div class="card">
+        <div class="card-head">Pozitia in joc (FiveM)</div>
+        <label>Resursa <input type="text" :value="joc.resursa" placeholder="oras_..." @change="setJoc('resursa', $event.target.value)"></label>
+        <div class="two">
+          <label>X in joc <input type="number" step="50" :value="joc.x" @change="setJoc('x', +$event.target.value)"></label>
+          <label>Y in joc <input type="number" step="50" :value="joc.y" @change="setJoc('y', +$event.target.value)"></label>
+        </div>
+        <label>Peste mare <span class="unit"><input type="number" step="0.5" :value="joc.z" @change="setJoc('z', +$event.target.value)">m</span></label>
+        <p class="note">Orasul se muta aici, in ocean (Los Santos e in jurul lui 0, 0; harta dzdemo la X 7000-8000). Apa desenata e marea din joc.</p>
+      </div>
+      <div class="card">
+        <div class="card-head">Cum ajunge in joc</div>
+        <p class="note"><b>Trimite in joc</b> (sus) genereaza doar ce ai schimbat, exporta doar modelele schimbate si reporneste harta
+          pe server. Prima data dupa o schimbare a generatorului reface tot orasul (mai lent).</p>
+        <div class="export-box" v-if="exportResult">
+          <p v-if="exportResult.ok" class="good">Resursa scrisa: {{ exportResult.res_dir }}</p>
+          <p v-else class="bad">Exportul a esuat: {{ exportResult.error }}</p>
+          <template v-if="exportResult.ok">
+            <p>{{ exportResult.gta }} obiecte GTA, {{ exportResult.models }} modele noi, {{ exportResult.ybn }} coliziuni.</p>
+            <button v-if="!info.in_cfg" class="primary small" @click="addToCfg">Adauga "ensure {{ info.resursa }}" in server.cfg</button>
+            <p v-else class="good">server.cfg are deja "ensure {{ info.resursa }}".</p>
+            <p class="note">Modelele noi se incarca la pornirea serverului si a jocului; apoi mergi la
+              <b class="mono">{{ spawnText }}</b> (noclip / teleport de admin).</p>
+          </template>
+        </div>
+        <div class="row">
+          <button :disabled="generating" @click="generate">Doar genereaza</button>
+          <button :disabled="generating" @click="exportFivem">Doar exportul FiveM</button>
+          <button :disabled="!lastFile && !info.blend" @click="openBlender">Blender</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------------------------------------------------------------- Probleme -->
+    <div class="tab-body" v-show="rightTab === 'probleme'">
+      <div class="empty" v-if="!warnings.length">
+        <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>
+        <p>Nicio problema.</p>
+      </div>
+      <div class="card" v-else>
+        <div class="card-head"><svg viewBox="0 0 24 24" class="ico warn-ico"><path d="M12 3l10 18H2zM12 10v5M12 18v.5"/></svg>Probleme ({{ warnings.length }})</div>
+        <p class="note">Click pe una: harta sare la locul ei.</p>
+        <button v-if="warnings.some(w => w.tip === 'unghi' || w.tip === 'incrucisare')" class="wide" @click="fixAngles"
+                title="Curbeaza strazile care intra in acelasi nod sub 25 de grade si pune noduri unde doua strazi se taie">Repara automat unghiurile si incrucisarile</button>
+        <div class="warn-item" v-for="(w, i) in warnings" :key="i" @click="goTo(w.x, w.y)">
+          <span class="warn-dot"></span>{{ w.mesaj }}
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ================================================================ bara de stare -->
+  <footer class="statusbar">
+    <span class="mono coords">{{ mouseTxt || '' }}</span>
+    <span class="sb-tool"><span class="dot live" :style="{background: toolColor}"></span>{{ currentTool.name }}
+      <template v-if="tool === 'road'"> &middot; {{ roadModeName }} &middot; {{ allRoadTypes[roadType] }}<template v-if="zOff"> &middot; {{ zOff > 0 ? '+' : '' }}{{ zOff }} m</template></template>
+      <template v-if="tool === 'zone'"> &middot; {{ zoneName(zoneType) }}</template></span>
+    <span class="grow"></span>
+    <span v-if="analysis" class="muted">{{ plan.roads.length }} strazi &middot; {{ Object.keys(analysis.junctions).length }} intersectii &middot; {{ analysis.blocks.filter(b => b.valid).length }} cvartale</span>
+    <button class="sbtn" :class="{warn: warnings.length}" @click="rightTab = 'probleme'">{{ warnings.length }} probleme</button>
+    <button class="sbtn" v-if="log.length" :class="{busy: generating}" @click="showLog = !showLog">
+      <span v-if="generating" class="spinner small"></span>{{ generating ? buildLabel() : 'consola' }}</button>
+    <span class="save-state" :class="{dirty: dirty}">{{ dirty ? 'nesalvat' : 'salvat' }}</span>
+  </footer>
+</div>
+<script src="lib/vue.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -349,14 +349,140 @@ async function showOverlay() {{
         await wait(100);
     }}
     SetMinimapOverlayDisplay(overlay, X, Y, SCALE_X, SCALE_Y, 100.0);
+    console.log(`[{cfg.name}] minimap overlay ${{overlay}} din ${{FILE}} afisat la X=${{X}} Y=${{Y}} scara=${{SCALE_X}} (vezi F8)`);
 }}
 
 setTimeout(showOverlay, 1000);
 
+// comenzi de test (F8 / chat): /minimap_test = un dreptunghi rosu in locul hartii (fara imagine: daca el apare si
+// harta nu, jocul refuza imaginea); /minimap_y = intoarce semnul lui Y; /minimap_scale <n> = alta scara
+let test = -1, ySign = 1.0, scale = SCALE_X;
+const tests = {{}};
+function place(id) {{ if (id >= 0) SetMinimapOverlayDisplay(id, X, Y * ySign, scale, scale, 100.0); }}
+RegisterCommand('minimap_test', async (src, args) => {{
+    const kind = (args[0] || 'a').toLowerCase();       // a = GFX+ExporterInfo, b = SWF simplu, c = GFX simplu
+    if (kind === 'd') return showTexture('commonmenu', 'shop_tick_icon');
+    if (kind === 'e') return showTexture(`${{NAME}}_map`, `${{NAME}}_map`);
+    const file = FILE.replace('.gfx', `_test_${{kind}}.gfx`);
+    if (!(kind in tests)) {{
+        tests[kind] = AddMinimapOverlay(file);
+        while (!HasMinimapOverlayLoaded(tests[kind])) await wait(100);
+    }}
+    test = tests[kind];
+    place(test);
+    console.log(`[{cfg.name}] test overlay ${{test}} din ${{file}} la X=${{X}} Y=${{Y * ySign}} scara=${{scale}}`);
+}}, false);
+// varianta cu textura din .ytd, prin incarcatorul cu ActionScript (<nume>_loader.gfx):
+//   minimap_test d = o bifa din jocul de baza (commonmenu/shop_tick_icon) intinsa peste oras
+//   minimap_test e = harta noastra (textura <nume>_map din stream/<nume>_map.ytd)
+//   minimap_tex <txd> <txn> = orice textura
+let loader = -1, tiles = 0;
+const NAME = GetCurrentResourceName();
+async function showTexture(txd, txn) {{
+    if (loader < 0) {{
+        loader = AddMinimapOverlay(FILE.replace('_minimap.gfx', '_loader.gfx'));
+        while (!HasMinimapOverlayLoaded(loader)) await wait(100);
+        SetMinimapOverlayDisplay(loader, 0.0, 0.0, 100.0, 100.0, 100.0);
+    }}
+    RequestStreamedTextureDict(txd, false);
+    const t0 = GetGameTimer();
+    while (!HasStreamedTextureDictLoaded(txd)) {{
+        if (GetGameTimer() - t0 > 8000) {{ console.log(`[{cfg.name}] textura ${{txd}} nu s-a incarcat`); return; }}
+        await wait(50);
+    }}
+    const [tw, th] = GetTextureResolution(txd, txn);
+    const sizeM = SCALE_X * {w_px} / 100.0;                 // latura hartii, in metri
+    const sx = sizeM / Math.max(tw, 1) * 100.0, sy = sizeM / Math.max(th, 1) * 100.0;
+    CallMinimapScaleformFunction(loader, 'ADD_SCALED_OVERLAY');
+    ScaleformMovieMethodAddParamTextureNameString(txd);
+    ScaleformMovieMethodAddParamTextureNameString(txn);
+    ScaleformMovieMethodAddParamFloat(X);               // coltul de nord-vest, in coordonate de joc
+    ScaleformMovieMethodAddParamFloat(-Y);
+    ScaleformMovieMethodAddParamFloat(0.0);
+    ScaleformMovieMethodAddParamFloat(sx);
+    ScaleformMovieMethodAddParamFloat(sy);
+    ScaleformMovieMethodAddParamInt(100);
+    ScaleformMovieMethodAddParamBool(false);
+    EndScaleformMovieMethod();
+    tiles++;
+    console.log(`[{cfg.name}] textura ${{txd}}/${{txn}} (${{tw}}x${{th}}) pusa la X=${{X}} Y=${{-Y}} scara=${{sx.toFixed(1)}}`);
+}}
+RegisterCommand('minimap_tex', (src, args) => {{ if (args.length >= 2) showTexture(args[0], args[1]); }}, false);
+RegisterCommand('minimap_y', () => {{ ySign = -ySign; place(overlay); place(test); console.log(`[{cfg.name}] Y=${{Y * ySign}}`); }}, false);
+RegisterCommand('minimap_scale', (src, args) => {{
+    scale = parseFloat(args[0]) || SCALE_X; place(overlay); place(test); console.log(`[{cfg.name}] scara=${{scale}}`);
+}}, false);
+
 on('onResourceStop', (name) => {{
-    if (name !== GetCurrentResourceName() || overlay < 0) return;
-    if (typeof RemoveMinimapOverlay === 'function') RemoveMinimapOverlay(overlay);
-    else SetMinimapOverlayDisplay(overlay, X, Y, SCALE_X, SCALE_Y, 0.0);
+    if (name !== GetCurrentResourceName()) return;
+    for (const id of [overlay, loader, ...Object.values(tests)]) {{
+        if (id < 0) continue;
+        if (typeof RemoveMinimapOverlay === 'function') RemoveMinimapOverlay(id);
+        else SetMinimapOverlayDisplay(id, X, Y, SCALE_X, SCALE_Y, 0.0);
+    }}
+}});
+"""
+
+
+def minimap_loader_script(name: str, loader: str, tex: str, west: float, north: float, size: float) -> str:
+    """Script client (JS): harta ca textura din stream/<tex>.ytd, pusa pe radar si pe harta mare de <loader>
+    (incarcatorul Scaleform MINIMAP_LOADER.gfx din resursa "Extra Map Tiles" de L1CKS / Lughworks). Singura metoda
+    verificata in joc: un .swf scris de noi, cu imaginea inauntru, se incarca dar nu se deseneaza."""
+    return f"""/* Harta {name} pe radar si pe harta mare: textura {tex} din stream/{tex}.ytd, pusa de {loader}
+   (incarcator Scaleform din resursa Extra Map Tiles, L1CKS / Lughworks). Generat la export - nu edita de mana. */
+const LOADER = '{loader}', TXD = '{tex}', TXN = '{tex}';
+const WEST = {west:.1f}, NORTH = {north:.1f}, SIZE = {size:.1f};   // coltul de nord-vest si latura, in metri
+let overlay = -1;
+const blips = [];
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function show() {{
+    while (!NetworkIsPlayerActive(PlayerId())) await wait(500);
+    overlay = AddMinimapOverlay(LOADER);
+    while (!HasMinimapOverlayLoaded(overlay)) await wait(100);
+    SetMinimapOverlayDisplay(overlay, 0.0, 0.0, 100.0, 100.0, 100.0);
+    RequestStreamedTextureDict(TXD, false);
+    const started = GetGameTimer();
+    while (!HasStreamedTextureDictLoaded(TXD)) {{
+        if (GetGameTimer() - started > 15000) {{
+            console.log(`[{name}] textura hartii nu s-a incarcat: ${{TXD}}.ytd`);
+            return;
+        }}
+        await wait(50);
+    }}
+    const [tw, th] = GetTextureResolution(TXD, TXN);
+    CallMinimapScaleformFunction(overlay, 'ADD_SCALED_OVERLAY');
+    ScaleformMovieMethodAddParamTextureNameString(TXD);
+    ScaleformMovieMethodAddParamTextureNameString(TXN);
+    ScaleformMovieMethodAddParamFloat(WEST);
+    ScaleformMovieMethodAddParamFloat(NORTH);
+    ScaleformMovieMethodAddParamFloat(0.0);                                  // rotire
+    ScaleformMovieMethodAddParamFloat(SIZE / Math.max(tw, 1) * 100.0);        // 100 = 1 px pe metru
+    ScaleformMovieMethodAddParamFloat(SIZE / Math.max(th, 1) * 100.0);
+    ScaleformMovieMethodAddParamInt(100);                                    // opacitate
+    ScaleformMovieMethodAddParamBool(false);                                 // ancorat in coltul de nord-vest
+    EndScaleformMovieMethod();
+    SetStreamedTextureDictAsNoLongerNeeded(TXD);
+    // harta mare din pauza se deruleaza doar pana la ultimul blip: patru blipuri invizibile in colturile orasului
+    for (const [x, y] of [[WEST, NORTH], [WEST + SIZE, NORTH], [WEST, NORTH - SIZE], [WEST + SIZE, NORTH - SIZE]]) {{
+        const blip = AddBlipForCoord(x, y, 1.0);
+        SetBlipDisplay(blip, 4);
+        SetBlipAlpha(blip, 0);
+        blips.push(blip);
+    }}
+    console.log(`[{name}] harta pe minimap: ${{TXD}} (${{tw}}x${{th}}) la X=${{WEST}} Y=${{NORTH}}, latura ${{SIZE}} m`);
+}}
+
+setTimeout(show, 1000);
+
+on('onResourceStop', (res) => {{
+    if (res !== GetCurrentResourceName()) return;
+    if (overlay >= 0) {{
+        CallMinimapScaleformFunction(overlay, 'REM_OVERLAY');
+        ScaleformMovieMethodAddParamInt(0);
+        EndScaleformMovieMethod();
+    }}
+    for (const blip of blips) RemoveBlip(blip);
 }});
 """
 

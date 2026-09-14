@@ -208,6 +208,233 @@ apoi ruleaza din nou impachetarea (sau pune fisierele manual in rpf / stream).
 Pentru pozitiile copacilor/props-urilor: sunt doar entitati in .ymap (nu obiecte Blender), ca sa nu incarce
 scena. Le poti edita in CodeWalker sau poti schimba densitatile in `config.py` si regenera.
 
+## Generator de orase: catalogul de arhetipuri vanilla (faza A)
+
+Cladirile de oras nu se genereaza procedural la calitatea GTA V. Ce se poate face e sa
+folosim modelele de cladire care exista deja in joc (au LOD-uri, coliziuni si texturi
+facute de artisti) si sa le asezam corect pe loturi generate. Pentru asta generatorul
+are nevoie de **amprenta exacta** a fiecarui model - si aia nu se poate ghici din nume.
+
+`dayzgen/city/` este stratul urban (numpy + json, fara Blender). Primul modul,
+`catalog.py`, tine fisa tehnica a fiecarui model: cutia (bbox), inaltimea, cat coboara
+sub origine, categoria (`tower`, `midrise`, `lowrise`, `shop`, `house`, `warehouse`,
+`garage`, `filler`, `prop`) si stilul (`downtown`, `vinewood`, `suburb`, `industrial`,
+`beach`, `country`). Rezultatul: `dayzgen/data/catalog.json`.
+
+### Varianta 0 (recomandata): direct din fisierele jocului
+
+```
+python tools\catalog_from_game.py              zonele de oras (_citye, _cityw)
+python tools\catalog_from_game.py --all        toata harta
+python tools\catalog_from_game.py --area _citye
+```
+
+Citeste arhivele `.rpf` ale GTA V cu `szio` (din `tools\pydeps`), gaseste toate `.ytyp`-urile
+si ia din ele numele exact si cutia exacta a fiecarei cladiri. Nu are nevoie de CodeWalker si
+nici de joc pornit. Calea jocului o ia din `CitizenFX.ini` al FiveM (sau `--gta "<cale>"`).
+Arhivele criptate se pot citi doar cu Python-ul din Blender (modulul nativ `pymateria` e
+compilat pentru Python 3.13); scriptul se re-lanseaza singur cu el.
+
+Arhetipurile importate au `ok = false`: stim ca exista si ce cutie au, dar unele `.ytyp` de
+harta se incarca doar cand esti in zona lor. Dupa import ruleaza `CATALOG.bat --candidates`
+si `/catalogscan` in joc: numele importate sunt verificate primele si marcate `ok`.
+
+Doua limite de stiut. Rockstar imparte fiecare cvartal in zeci de piese (sol, drum, overlay,
+detalii, decaluri, balcoane); filtrul pe nume taie majoritatea, dar nu pe toate, asa ca
+verifica vizual cu `/catalog <nume>` inainte sa te bazezi pe o categorie. Si cladirile de
+harta **nu au coliziune proprie** (doar cele cu eticheta `phys`): coliziunea lor e in `.ybn`-ul
+zonei originale, deci mutate pe alta harta se vad, dar nu sunt solide pana nu le coacem
+coliziunea in `.ybn`-ul nostru (faza C).
+
+### Varianta 1: masurat din joc (fara alte unelte)
+
+```
+CATALOG.bat --candidates        scrie dayzgen\data\candidates.json (~291.000 nume de incercat)
+```
+
+apoi in joc, ca admin nivel 5 (resursa `rrp_mapeditor`):
+
+```
+/catalogscan          faza 1: intreaba jocul ce nume exista (IsModelInCdimage), cateva secunde
+                      faza 2: incarca fiecare model valid si ii citeste cutia, cateva minute
+/catalogstop          opreste scanarea
+/catalog <model>      pune un model in fata ta, cu cutia desenata si dimensiunile scrise
+                      (Q/E roteste, DEL sterge; linia verde = fata modelului, adica strada)
+/catalogstats         cate modele are catalogul
+/catalogmerge         ruleaza make_catalog.py fara sa mai scanezi
+```
+
+Scanarea scrie `dayzgen\data\measurements.json` direct in folderul generatorului
+(calea vine din convarul `rrp_map_generator_dir`) si la final porneste singura
+`make_catalog.py`, care clasifica si scrie `catalog.json`.
+
+Numele se obtin in trei feluri, combinate: prop-urile de mobilier urban sunt o lista fixa
+in `dayzgen/city/seed_names.py`; cladirile se incearca combinatoric pe schema Rockstar
+`<zona>_<NN>_<ceva>` (`dt1_11_bld1`, `bh1_08_house3`, `id1_04_warehouse1`...); si orice
+lista de nume pusa ca `.txt`/`.ini` in `dayzgen/data/namelists/` (de exemplu
+`ObjectList.ini` de la Menyoo) e citita automat. Numele inexistente sunt aruncate de joc
+instant, deci ghicitul nu costa decat secunde de scanare.
+
+### Varianta 2: import din CodeWalker (mai precis, mai rapid)
+
+Daca ai CodeWalker: RPF Explorer -> search `.ytyp` -> selectezi fisierele -> Export XML.
+
+```
+python tools\import_ytyp_xml.py D:\ytyp_xml
+```
+
+Ia numele si cutiile direct din fisiere, fara scanare in joc. Cele doua variante se pot
+amesteca - importul si scanarea scriu in acelasi `catalog.json`.
+
+### Corectii manuale
+
+Clasificarea automata greseste uneori (o hala turtita si un bloc scund au aceeasi cutie):
+
+```
+CATALOG.bat --stats                       ce are catalogul acum, pe categorii
+CATALOG.bat --tag dt1_11_bld1 tower downtown
+CATALOG.bat --block ss1_03_garage         scoate un model urat din plasare
+CATALOG.bat --reclassify                  re-aplica regulile automate peste tot
+```
+
+Etichetele puse manual (categorie, stil, `yaw_offset`, `blocked`) **nu** se pierd la
+re-scanare sau re-import.
+
+## Oras generat, vazut in Blender cu modelele reale din GTA V
+
+Generatorul face strazile, zonele si cladirile. Blender e locul in care vezi orasul cu modelele
+si texturile originale din joc si il retusezi. Editorul din joc ramane pentru detalii.
+Formatul de schimb intre ele e harta GTA (`.ymap`).
+
+```
+python generate_city.py                          orasul, din map.json (orasul pornit automat)
+python generate_city.py --preset demo --radius 280 --seed 7
+BIBLIOTECA_GTA.bat                               modelele din joc in Blender + scena orasului
+BLENDER_EDITOR.bat                               deschide scena in Blender, cu Sollumz configurat
+```
+
+`generate_city.py` scrie in `output\<nume>_oras\`:
+
+| Fisier | Ce e |
+|--------|------|
+| `<nume>_city.ymap` | cladirile, in coordonate de lume, pentru joc si pentru Blender |
+| `plan.json` | loturile si cladirile |
+| `terrain.npz` | relieful, strazile si zonele, pentru scena din Blender |
+| `ytyps.txt` | fisierele `.ytyp` din joc de care au nevoie cladirile |
+| `preview.png` | harta 2D, cu amprentele cladirilor colorate pe categorie |
+
+Cum alege cladirile: fiecare zona are categoriile ei (turnuri si blocuri in centru, case in
+suburbie, hale in zona industriala), retragerea de la trotuar si marimea lotului. Pe fiecare
+lot se pune un model din catalog care incape, cu fata spre strada, asezat pe coltul cel mai de
+jos al terenului. Modelele din port, aeroport si zonele industriale merg doar in zona industriala.
+Cele cu LOD propriu (eticheta `haslod`) au o sansa mai mare, iar un model deja folosit pierde
+repede din sansa, ca orasul sa nu se repete. Unghiul gridului se alege dintre 8
+incercari, dupa cate cvartale incap pe relief.
+
+Nici numele, nici LOD-ul propriu nu spun sigur ce e o cladire intreaga. De aceea
+`python tools\measure_solidity.py --all` incarca geometria fiecarui model din joc si masoara cat
+din amprenta lui e acoperit de acoperis, vazut de sus. Conteaza doar suprafetele de deasupra unui
+sfert din inaltime, ca planurile de la sol (iarba, umbre, apa) sa nu para acoperisuri. Modelele peste prag primesc eticheta `solid`,
+iar plasatorul le foloseste doar pe ele (eticheta `cov:NN` pastreaza procentul masurat).
+
+`BIBLIOTECA_GTA.bat` foloseste functia Sollumz de biblioteca de modele: citeste direct arhivele
+jocului (fara CodeWalker) si face cate un `.blend` pentru fiecare `.ytyp` din `ytyps.txt`, in
+`output\gta_asset_library\`. Prima rulare indexeaza tot jocul si dureaza cateva minute; dupa aceea
+construieste doar fisierele noi. La final face `<nume>_city.blend` si `render.png`.
+
+Unele texturi nu sunt in dictionarul propriu al cladirii, ci in dictionare comune ale jocului,
+iar Sollumz nu le gaseste: in Blender apar roz. Ultimul pas al bibliotecii le cauta dupa nume in
+toate `.ytd`-urile jocului si le scrie ca `.dds` langa biblioteca, unde Blender le cauta singur
+(`tools\gta_textures.py` face acelasi lucru separat).
+
+In Blender (`BLENDER_EDITOR.bat`), fiecare entitate din `.ymap` e modelul real, cu texturi:
+- muti, rotesti sau stergi cladiri direct in scena;
+- adaugi cladiri noi din Asset Browser, biblioteca „GTA V (generator)”;
+- adaugi obiecte proprii (mesh-uri modelate, sculptate sau generate);
+- exporti totul in FiveM cu panoul de mai jos.
+
+Strazile generate sunt deocamdata doar teren nivelat (fara asfalt si borduri).
+
+## Harta facuta de mana in Blender (tab-ul Harta)
+
+Pentru cine nu stie Blender: [GHID_BLENDER.md](GHID_BLENDER.md), o pagina cu tastele si pasii.
+
+`BLENDER_EDITOR.bat` aranjeaza singur ecranul: viewport cu texturile vizibile, **Asset Browser** jos, pe
+biblioteca „GTA V (generator)”, si tab-ul **Harta** in bara din dreapta (tasta N). Uneltele, in ordine:
+
+| Unealta | Ce face |
+|---|---|
+| *Harta noua* | teren plat din placi de 100 m (fiecare placa e un model separat, vizibil de la 1,5 km), sageata de spawn, cutia cu limitele hartii |
+| *Pune pe sol* (tasta **J**) | asaza obiectele selectate cu baza pe teren (la cladirile GTA originea e de obicei la mijlocul cutiei, nu jos) |
+| *90 stanga / 90 dreapta* | rotire in pasi de 90 de grade |
+| *Lipeste de vecin* | ia orientarea celui mai apropiat obiect si il lipeste de el, cu fatadele in linie |
+| *Deseneaza linie* | click-uri pe teren, Enter la final, C inchide linia (zona) |
+| *Multiplica* | copii ale obiectului de-a lungul liniei selectate (pas, departare, pe ambele parti) sau drept in fata lui |
+| *Imprastie in zona* | copii la intamplare ale obiectelor selectate, in interiorul unei linii inchise |
+| *Rigla* | masurat distante |
+
+**Generatorul de cladiri** (`tools/blender_gen_buildings.py`, sectiunea 5 din tab): vila in stil Vinewood
+(tencuiala, pietre de colt, acoperis in patru ape), casa (doua ape, veranda, garaj), bloc de caramida in stil
+Liberty City (buiandrugi, cornisa, atic, scara de incendiu, rezervor de apa, magazine la parter), magazin
+(vitrine, copertine, firma), hala (rulouri, tabla). Dimensiunile implicite sunt medianele cladirilor GTA
+intregi din catalog. Texturi „GTA” = materialele originale din biblioteca (cautate o data si tinute minte in
+`output/gta_asset_library/_materiale_cladiri.json`); „simple” = texturile generatorului. Ferestrele au rama si
+montanti din geometrie si sticla generata (texturile de fereastra din joc sunt atlase). Interiorul „simplu”
+(pereti cu grosime, podele, scara, camere cu goluri de usa) e un obiect-copil separat. Acelasi seed da
+aceeasi cladire; cladirile se exporta ca modele noi, cu coliziune.
+
+Copiile folosesc acelasi model (ca Alt+D), deci la export devin tot referinte GTA, nu modele noi.
+Liniile desenate nu se exporta. Tasta **F** centreaza vederea pe selectie.
+
+Biblioteca din Asset Browser e pe categorii: Case, Cladiri mici, Blocuri, Turnuri, Magazine si
+benzinarii, Hale si depozite, Garaje si anexe, Props/Garduri si porti, Props/Vegetatie, Props/Stalpi si
+semne, Props/Mobilier stradal etc. In categoriile principale intra doar cladirile masurate ca intregi
+(`solid`); restul stau in `Bucati (avansat)`. Fiecare model are descrierea cu dimensiunile si etichete
+(`mic/mediu/mare`, stilul zonei). `tools\blender_library_catalogs.py` face organizarea si ruleaza singur la
+finalul fiecarui import; `IMPORTA_GTA.bat props` aduce props-urile utile (lista in `tools\props_ytyps.txt`).
+
+## Export din Blender in FiveM
+
+`BLENDER_EDITOR.bat` incarca si panoul de export: in viewport, bara laterala (tasta N), tab-ul
+**FiveM**. *Exporta in FiveM* scrie resursa hartii in folderul de resurse al serverului (implicit
+`fivem_resources_dir` din `map.json`); o singura data adaugi `ensure <nume>` in `server.cfg`.
+Exportul ruleaza intr-un Blender separat, pe o copie a scenei, deci fisierul deschis nu se schimba.
+*Verifica* numara ce se exporta si cum, fara sa scrie nimic.
+
+| Obiect vizibil in scena | In resursa |
+|-------------------------|------------|
+| model tras din biblioteca „GTA V (generator)” | referinta la joc: nume, pozitie, rotatie, scala; fara geometrie si texturi |
+| orice alt mesh (modelat, sculptat, generat, cu modificatori) | model nou `.ydr`, cu texturile incorporate |
+| interior GTA (MLO) | nu se exporta inca |
+
+- **Cladirile GTA din fisierele `.ytyp` cu `_strm`** se incarca in joc doar langa locul lor
+  original. Exportul le copiaza definitia in `<nume>_types.ytyp`, sub numele `<nume>_<model>`,
+  cu acelasi model si aceleasi texturi din joc, ca sa se vada oriunde pe harta. Locul fisierelor
+  `.ytyp` in arhivele jocului se retine in `output\ytyp_index.json` (se face o data, in cateva secunde).
+- **Scala**: GTA are o singura scala pentru X si Y si alta pentru Z; la modelele GTA se foloseste X.
+  La modelele noi scala intra in geometrie, deci merge orice scala, inclusiv oglindirea.
+- **Materialele** modelelor noi trec automat pe shader-e GTA (conversia Sollumz). Texturile PNG/JPG
+  devin DDS, iar un material fara textura primeste o textura de culoarea lui.
+- **Coliziunea** (`.ybn` static, cate unul la 200 m) se coace din geometria simplificata, pentru
+  modelele noi si pentru cladirile GTA, care in afara locului lor original nu sunt solide. Modelele
+  cu coliziune proprie (props) nu primesc alta.
+- Obiectele care impart acelasi mesh (Alt+D), fara modificatori si cu aceeasi scala, devin un singur model.
+- Coordonatele din Blender sunt chiar coordonatele din GTA; *Mutare* le deplaseaza pe toate.
+- *Vizibile de la* e distanta minima de la care se vad cladirile (peste 10 m) si modelele noi.
+
+Pe obiectul activ: *Model nou* exporta un model GTA ca model propriu (de exemplu dupa ce l-ai
+sculptat), iar *Fara coliziune* il lasa fara coliziune (decor prin care se poate trece).
+
+Fara interfata:
+
+```
+tools\_blender.bat -b oras.blend -P tools\blender_fivem_export.py -- --name oras_meu
+    [--out <folder resurse>] [--offset x,y,z] [--lod 300] [--no-gta-col]
+```
+
+La fiecare export folderul `stream` al resursei se rescrie. Un folder existent care nu a fost scris
+de export (fara fisierul `.export_blender`) nu se atinge.
+
 ## Limitari cunoscute (varianta 0.1)
 
 - Casele nu au interior (sunt solide); DayZ-ul adevarat are cladiri enterabile - se pot adauga ulterior ca modele

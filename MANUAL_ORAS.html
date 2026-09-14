@@ -1,0 +1,693 @@
+<title>Manualul orașului RRP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root {
+  --ground: #eef0f1;
+  --surface: #fafbfb;
+  --ink: #1c2126;
+  --muted: #56606b;
+  --rule: #d3d9df;
+  --asphalt: #383d46;
+  --walk: #7d8591;
+  --paint: #e0b030;
+  --paint-deep: #7a5600;
+  --paint-tint: #f6ecd0;
+  --curb: #b83a31;
+  --curb-tint: #f7e2df;
+  --link: #24548c;
+  --kbd-ink: #1c2126;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Public Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #1b1f24;
+    --surface: #22272d;
+    --ink: #e6e9ed;
+    --muted: #9ba5b0;
+    --rule: #353c45;
+    --asphalt: #12151a;
+    --walk: #8a929d;
+    --paint: #e3b23c;
+    --paint-deep: #e8bf55;
+    --paint-tint: #2f2a1c;
+    --curb: #e0776c;
+    --curb-tint: #3a2421;
+    --link: #8fbaea;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #1b1f24;
+  --surface: #22272d;
+  --ink: #e6e9ed;
+  --muted: #9ba5b0;
+  --rule: #353c45;
+  --asphalt: #12151a;
+  --walk: #8a929d;
+  --paint: #e3b23c;
+  --paint-deep: #e8bf55;
+  --paint-tint: #2f2a1c;
+  --curb: #e0776c;
+  --curb-tint: #3a2421;
+  --link: #8fbaea;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font: 16px/1.6 var(--body);
+  padding-inline: 20px;
+  padding-block: 0 64px;
+}
+a { color: var(--link); text-underline-offset: 2px; }
+a:focus-visible, summary:focus-visible { outline: 2px solid var(--paint); outline-offset: 2px; }
+
+.page { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 48px; }
+
+/* ---------- index ---------- */
+.toc { grid-column: 1; grid-row: 1 / 3; position: sticky; top: 0; align-self: start; max-height: 100vh; overflow-y: auto; padding-block: 36px 24px; }
+.toc h2 { font: 600 0.8rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; border: 0; padding: 0; }
+.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.toc li a { display: block; padding: 4px 8px; text-decoration: none; color: var(--ink); font-size: 0.92rem; border-radius: 3px; }
+.toc li a:hover { background: var(--paint-tint); }
+.toc li.sub a { padding-left: 20px; color: var(--muted); font-size: 0.86rem; }
+.toc details summary { display: none; }
+
+/* ---------- head ---------- */
+header.top { padding-block: 44px 8px; grid-column: 2; }
+.eyebrow { font: 600 0.78rem/1.2 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+h1 {
+  font: 700 clamp(2.6rem, 6vw, 4rem)/0.95 var(--display);
+  text-transform: uppercase; letter-spacing: 0.01em; margin: 0;
+  text-wrap: balance;
+}
+/* linia dubla galbena din mijlocul strazii */
+.centerline { height: 10px; margin-block: 18px 22px; max-width: 520px;
+  background: linear-gradient(var(--paint), var(--paint)) top / 100% 3px no-repeat,
+              linear-gradient(var(--paint), var(--paint)) bottom / 100% 3px no-repeat; }
+.lede { font-size: 1.12rem; max-width: 64ch; margin: 0; color: var(--ink); }
+
+main { grid-column: 2; min-width: 0; }
+section { padding-block: 28px 8px; }
+h2 {
+  font: 600 2rem/1.05 var(--display); text-transform: uppercase; letter-spacing: 0.015em;
+  margin: 12px 0 6px; text-wrap: balance; padding-bottom: 12px;
+  /* marcaj intrerupt de banda */
+  background: repeating-linear-gradient(90deg, var(--walk) 0 26px, transparent 26px 44px) bottom / 100% 3px no-repeat;
+}
+h3 { font: 700 1.08rem/1.3 var(--body); margin: 30px 0 6px; text-wrap: balance; }
+h4 { font: 600 0.8rem/1.3 var(--mono); letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); margin: 22px 0 6px; }
+p, li { max-width: 68ch; }
+p { margin: 8px 0; }
+ul, ol { padding-left: 1.3em; margin: 8px 0; }
+li { margin: 4px 0; }
+li::marker { color: var(--walk); }
+.where { font: 600 0.78rem/1.4 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 0; }
+
+/* taste = marcaj galben pe asfalt */
+kbd {
+  font: 600 0.78em/1 var(--mono); color: var(--kbd-ink); background: var(--paint);
+  padding: 3px 6px 2px; border-radius: 3px; box-shadow: inset 0 -2px 0 rgba(0,0,0,0.22);
+  white-space: nowrap; display: inline-block;
+}
+/* butoane si campuri din unelte, scrise exact ca pe ecran */
+.ui { font: 600 0.84em/1 var(--body); border: 1px solid var(--walk); padding: 2px 6px 3px; border-radius: 3px; white-space: nowrap; display: inline-block; background: var(--surface); }
+code, .file { font: 0.88em var(--mono); background: var(--surface); border: 1px solid var(--rule); padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+
+/* ---------- fluxul: o linie de marcaj cu statii ---------- */
+.route { list-style: none; margin: 26px 0 8px; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); position: relative; }
+.route::before { content: ""; position: absolute; left: 10%; right: 10%; top: 13px; height: 4px;
+  background: repeating-linear-gradient(90deg, var(--paint) 0 22px, transparent 22px 36px); }
+.route li { position: relative; text-align: center; padding: 0 6px; margin: 0; max-width: none; }
+.route .stop { width: 30px; height: 30px; margin: 0 auto 10px; border-radius: 50%; background: var(--asphalt); border: 4px solid var(--paint); position: relative;
+  display: grid; place-items: center; color: #fff; font: 700 0.8rem/1 var(--mono); }
+.route b { display: block; font: 600 1.15rem/1.1 var(--display); text-transform: uppercase; letter-spacing: 0.02em; }
+.route span { display: block; font-size: 0.84rem; color: var(--muted); margin-top: 3px; }
+.route .opt .stop { background: var(--surface); color: var(--ink); border-style: dashed; }
+
+/* ---------- tabele ---------- */
+.scroll { overflow-x: auto; margin: 12px 0; }
+table { border-collapse: collapse; width: 100%; min-width: 520px; font-size: 0.93rem; background: var(--surface); }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font: 600 0.75rem/1.3 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); background: var(--ground); border-bottom: 2px solid var(--rule); }
+td:first-child { white-space: nowrap; }
+td.wrap { white-space: normal; }
+.num { font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 0.88rem; }
+tr.fast td { background: var(--paint-tint); }
+
+/* ---------- note ---------- */
+.flag { display: inline-block; font: 700 0.68rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 6px; border-radius: 2px; vertical-align: 2px; }
+.flag.untested { background: var(--curb-tint); color: var(--curb); }
+.flag.new { background: var(--paint-tint); color: var(--paint-deep); }
+.aside { background: var(--surface); border: 1px solid var(--rule); padding: 12px 16px; margin: 14px 0; max-width: 68ch; }
+.aside p { margin: 4px 0; }
+.aside.warn { border-color: var(--curb); }
+
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 28px; }
+.two > div > h4:first-child { margin-top: 8px; }
+dl.pairs { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 16px; margin: 10px 0; max-width: 72ch; }
+dl.pairs dt { font-weight: 700; }
+dl.pairs dd { margin: 0; }
+
+@media (max-width: 900px) {
+  .page { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  header.top, main { grid-column: 1; }
+  .toc { grid-column: 1; grid-row: auto; position: static; max-height: none; padding-block: 16px 0; }
+  .toc details summary { display: block; cursor: pointer; font: 600 0.8rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 10px 0; }
+  .toc details:not([open]) ol, .toc details:not([open]) h2 { display: none; }
+  .toc details[open] h2 { display: none; }
+  .two { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 620px) {
+  .route { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .route::before { left: 13px; right: auto; top: 12px; bottom: 12px; width: 4px; height: auto;
+    background: repeating-linear-gradient(180deg, var(--paint) 0 18px, transparent 18px 30px); }
+  .route li { text-align: left; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px; align-items: start; }
+  .route .stop { margin: 0; }
+  dl.pairs { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  dl.pairs dd { margin-bottom: 8px; }
+}
+</style>
+
+<div class="page">
+  <nav class="toc" aria-label="Cuprins">
+    <details open>
+      <summary>Cuprins</summary>
+      <h2>Cuprins</h2>
+      <ol>
+        <li><a href="#flux">Cum se leagă uneltele</a></li>
+        <li><a href="#start">Prima pornire</a></li>
+        <li><a href="#web">Editorul de oraș</a></li>
+        <li class="sub"><a href="#strazi">Străzi și intersecții</a></li>
+        <li class="sub"><a href="#marcaje">Marcaje</a></li>
+        <li class="sub"><a href="#poduri">Poduri și tuneluri</a></li>
+        <li class="sub"><a href="#teren">Teren</a></li>
+        <li class="sub"><a href="#zone">Zone și suprafețe</a></li>
+        <li class="sub"><a href="#cladiri-mana">Clădiri și props</a></li>
+        <li class="sub"><a href="#probleme">Probleme și setări</a></li>
+        <li><a href="#generare">Generare și trimitere în joc</a></li>
+        <li><a href="#cladiri">Clădirile generate</a></li>
+        <li><a href="#joc">Editorul din joc</a></li>
+        <li class="sub"><a href="#pui">Pui obiecte</a></li>
+        <li class="sub"><a href="#modifici">Selectezi și modifici</a></li>
+        <li class="sub"><a href="#generate">Obiectele orașului</a></li>
+        <li class="sub"><a href="#texturi">Texturi</a></li>
+        <li class="sub"><a href="#kituri">Kituri, linie, perete</a></li>
+        <li class="sub"><a href="#pensula">Pensula</a></li>
+        <li class="sub"><a href="#export-joc">Export din joc</a></li>
+        <li><a href="#taste">Toate tastele</a></li>
+        <li><a href="#fisiere">Fișiere și setări server</a></li>
+        <li><a href="#netestat">Ce e încă netestat</a></li>
+      </ol>
+    </details>
+  </nav>
+
+  <header class="top">
+    <p class="eyebrow">RRP · editor de oraș · /mapeditor · export FiveM</p>
+    <h1>Manualul orașului RRP</h1>
+    <div class="centerline" role="presentation"></div>
+    <p class="lede">Desenezi orașul în browser, generatorul îl construiește în Blender, exportul îl pune pe serverul FiveM,
+      iar detaliile le termini direct în joc. Ghidul acoperă toate uneltele, pe rând, cu tastele lor.</p>
+  </header>
+
+  <main>
+    <!-- ================================================================ flux -->
+    <section id="flux">
+      <h2>Cum se leagă uneltele</h2>
+      <p>Orice oraș trece prin aceleași stații. Primele trei le repeți de câte ori schimbi ceva în plan; a patra e locul
+        în care pui detaliile de mână, iar a cincea e opțională.</p>
+      <ol class="route">
+        <li><div class="stop">1</div><div><b>Desenezi</b><span>Editorul de oraș, în browser (<span class="file">EDITOR_ORAS.bat</span>)</span></div></li>
+        <li><div class="stop">2</div><div><b>Generezi</b><span>Blender construiește străzi, cvartale, clădiri</span></div></li>
+        <li><div class="stop">3</div><div><b>Trimiți în joc</b><span>Resursa FiveM, harta se repornește singură</span></div></li>
+        <li><div class="stop">4</div><div><b>Detaliezi</b><span>În joc, cu <code>/mapeditor</code></span></div></li>
+        <li class="opt"><div class="stop">5</div><div><b>Blender</b><span>Opțional: vezi sau modifici tot în Blender</span></div></li>
+      </ol>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Unealta</th><th>Pornești cu</th><th>La ce e bună</th></tr></thead>
+          <tbody>
+            <tr><td>Editorul de oraș</td><td><span class="file">EDITOR_ORAS.bat</span></td><td class="wrap">Străzi la orice unghi, poduri, teren, zone, suprafețe, clădiri și props puse de mână, marcaje. Butoanele de generare și export.</td></tr>
+            <tr><td>Generatorul</td><td><span class="ui">Genereaza orasul</span></td><td class="wrap">Construiește planul în Blender: străzi cu trotuare și marcaje, intersecții, cvartale umplute după zonă, teren, apă, mobilier stradal.</td></tr>
+            <tr><td>Exportul FiveM</td><td><span class="ui">FiveM</span> sau <span class="ui">Trimite in joc</span></td><td class="wrap">Face resursa <span class="file">oras_&lt;nume&gt;</span> în <span class="file">resources\[rrp]</span>: modele, coliziuni, harta pe radar, GPS pe străzile tale.</td></tr>
+            <tr><td>Editorul din joc</td><td><code>/mapeditor</code></td><td class="wrap">Obiecte GTA puse de mână, kituri de detaliu, texturi pe suprafețe și clădiri, pensulă de vegetație și gunoi.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================================================================ start -->
+    <section id="start">
+      <h2>Prima pornire</h2>
+      <p>Pașii de mai jos se fac o singură dată pentru un oraș nou. După aceea lucrezi doar cu butonul
+        <span class="ui">Trimite in joc</span>.</p>
+      <ol>
+        <li>Pornești <span class="file">EDITOR_ORAS.bat</span>. Se deschide editorul în browser (la <code>127.0.0.1</code>). Alegi un plan sau
+          începi unul nou; se salvează singur în <span class="file">output\orase\&lt;nume&gt;.json</span>.</li>
+        <li>În panoul din dreapta, cardul <span class="ui">In joc</span>: numele resursei (implicit <code>oras_&lt;nume&gt;</code>), X, Y și câți
+          metri stă orașul deasupra mării. Implicit X 6000, Y −2600, 25 m, în ocean, departe de Los Santos și de Cayo Perico.</li>
+        <li>Desenezi măcar câteva străzi și dai o zonă cvartalelor (vezi mai jos).</li>
+        <li>Apeși <span class="ui">Trimite in joc</span>. Prima dată durează cam 10 minute: generează și exportă tot.</li>
+        <li>În cardul <span class="ui">In joc</span> apare <span class="ui">Adauga "ensure ..." in server.cfg</span>. Îl apeși o dată, apoi
+          repornești serverul.</li>
+        <li>Intri în joc și mergi la coordonatele din card. De acum, fiecare <span class="ui">Trimite in joc</span> repornește harta
+          singur, fără reconectare.</li>
+      </ol>
+      <div class="aside">
+        <p><b>Editorul din joc</b> (<code>/mapeditor</code>) cere admin de nivel 5, pus pe duty. Harta pe care o editează e cea din
+          <code>rrp_map_resource</code> (vezi <a href="#fisiere">setările serverului</a>).</p>
+        <p><b>După o actualizare a uneltelor:</b> închizi și redeschizi <span class="file">EDITOR_ORAS.bat</span> și dai restart la server.
+          Prima generare de după o actualizare se face de la zero: generatorul vede că i s-a schimbat codul și nu mai refolosește nimic. E normal.</p>
+      </div>
+    </section>
+
+    <!-- ================================================================ web -->
+    <section id="web">
+      <p class="where">EDITOR_ORAS.bat · în browser</p>
+      <h2>Editorul de oraș</h2>
+      <p>Ecranul are patru părți. <b>Sus</b>: 2D / 3D, <span class="ui">Genereaza orasul</span>, <span class="ui">Blender</span>,
+        <span class="ui">FiveM</span>, <span class="ui">Trimite in joc</span> și bifa <span class="ui">de la zero</span>. <b>Stânga</b>: uneltele și
+        setările uneltei alese. <b>Mijloc</b>: harta. <b>Dreapta</b>: numărul de străzi, intersecții, cvartale și probleme, apoi cardul a ce ai
+        selectat.</p>
+      <p>Orice acțiune se anulează cu <kbd>Ctrl</kbd> <kbd>Z</kbd> (refaci cu <kbd>Ctrl</kbd> <kbd>Y</kbd>). <kbd>Tab</kbd> trece între 2D și 3D;
+        în 3D tragi cu stânga ca să rotești, cu dreapta ca să muți, rotița face zoom. <kbd>Home</kbd> arată tot planul.</p>
+
+      <h3>Uneltele</h3>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Tasta</th><th>Unealta</th><th>Ce face</th></tr></thead>
+          <tbody>
+            <tr><td><kbd>V</kbd></td><td>Selectează / mută</td><td class="wrap">Click pe nod, stradă, zonă, suprafață, clădire sau obiect; tragi ca să-l muți. Colțurile suprafețelor se trag și ele. <kbd>Delete</kbd> șterge.</td></tr>
+            <tr><td><kbd>R</kbd></td><td>Stradă</td><td class="wrap">Desenezi străzi, ca în Cities: Skylines. Detalii în <a href="#strazi">Străzi și intersecții</a>.</td></tr>
+            <tr><td><kbd>C</kbd></td><td>Curbează</td><td class="wrap">Tragi de o stradă ca s-o îndoi; tragi de un punct de curbă ca să-l muți.</td></tr>
+            <tr><td><kbd>T</kbd></td><td>Teren</td><td class="wrap">Pictezi dealuri și văi; străzile urcă și coboară cu ele.</td></tr>
+            <tr><td><kbd>H</kbd></td><td>Înălțime nod</td><td class="wrap">Rotița peste un nod îl ridică sau îl coboară (Shift: câte 0,1 m). La poduri nu mai e nevoie de ea.</td></tr>
+            <tr><td><kbd>Z</kbd></td><td>Zonă</td><td class="wrap">Alegi zona, apoi click în cvartal: ce clădiri se pun acolo.</td></tr>
+            <tr><td><kbd>P</kbd></td><td>Suprafață</td><td class="wrap">Parc, piațetă, parcare, teren de sport, gazon, apă sau o zonă de clădiri, desenată colț cu colț.</td></tr>
+            <tr><td><kbd>B</kbd></td><td>Pensulă</td><td class="wrap">Copaci, tufe, bănci, gunoaie, containere și alte props GTA pictate pe hartă.</td></tr>
+            <tr><td><kbd>K</kbd></td><td>Clădire</td><td class="wrap">O clădire generată sau una din catalogul GTA, pusă de tine; se întoarce singură spre stradă.</td></tr>
+            <tr><td><kbd>F</kbd></td><td>Fundal</td><td class="wrap">Muți și rotești imaginea de fundal importată (o hartă sau o schiță de urmărit).</td></tr>
+            <tr><td><kbd>X</kbd></td><td>Șterge</td><td class="wrap">Click pe ce vrei să ștergi: nod, stradă, zonă, suprafață, clădire, obiect, punct.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="strazi">Străzi și intersecții</h3>
+      <p>Unealta Stradă are patru moduri:</p>
+      <dl class="pairs">
+        <dt><kbd>1</kbd> Drept</dt><dd>Click la început, click la capăt; continui din capăt.</dd>
+        <dt><kbd>2</kbd> Curb</dt><dd>Click la început, click unde se îndoaie, click la capăt.</dd>
+        <dt><kbd>3</kbd> Liber</dt><dd>Fiecare bucată continuă lin din cea dinainte.</dd>
+        <dt><kbd>4</kbd> Schimbă tip</dt><dd>Click pe o stradă existentă: primește tipul ales în stânga.</dd>
+      </dl>
+      <p>Înainte să pui strada vezi lățimea ei reală, lungimea, unghiul, înălțimea și panta. Se lipește de noduri și de alte străzi,
+        iar unghiul se prinde la 15° și 90° față de strada din care pleci. <kbd>Shift</kbd> = fără lipire de unghi, <kbd>Ctrl</kbd> = grilă de 5 m,
+        <kbd>Alt</kbd> = fără nicio lipire. Click dreapta sau <kbd>Esc</kbd> = un pas înapoi, <kbd>Enter</kbd> sau dublu-click = gata.</p>
+      <ul>
+        <li><b>Intersecțiile apar singure</b> unde treci peste o stradă (punct verde; roșu = unghi prea ascuțit).</li>
+        <li><b>Unești două noduri</b> trăgând un nod peste altul cu <kbd>V</kbd>: se fac unul singur, iar străzile lor se leagă.</li>
+        <li><b>Tipuri de stradă:</b> <i>strada</i> (8 m carosabil + 2 × 3 m trotuar), <i>artera</i> (14 m + 2 × 3,5 m), <i>alee</i> (5 m + 2 × 1,5 m).
+          Cu <span class="ui">+ Tip nou</span> îți faci unul: benzi pe sens, lățimea benzii, trotuar, mediană (iarbă sau beton), parcare, copaci pe trotuar, distanța dintre stâlpi.</li>
+        <li><b>Nodul</b> (click pe el): <span class="ui">Pe teren</span> = stă pe teren și urcă cu dealul; <span class="ui">Inaltime aleasa</span> = îi scrii tu înălțimea.</li>
+        <li><b>Strada selectată</b> are tipul, nivelul (la sol, pod, tunel), lungimea, panta, graficul lateral și butonul <span class="ui">Indreapta</span> pentru curbe.</li>
+      </ul>
+
+      <h3 id="marcaje">Marcaje <span class="flag new">nou</span></h3>
+      <p>În cardul străzii selectate, secțiunea <span class="ui">Marcaje</span>. Fără nicio setare, strada ia marcajele tipului ei.
+        Capetele <b>a</b> și <b>b</b> sunt scrise pe hartă lângă strada selectată; când te apropii de hartă, marcajele se văd schematic.</p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Setare</th><th>Variante</th><th>Ce iese pe asfalt</th></tr></thead>
+          <tbody>
+            <tr><td>Linia din mijloc</td><td class="wrap">dublă galbenă, simplă, întreruptă, fără</td><td class="wrap">Linia galbenă dintre sensuri; întreruptă = se poate depăși.</td></tr>
+            <tr><td>Benzi spre a / spre b</td><td>1–4 pe fiecare sens</td><td class="wrap">Linii albe întrerupte între benzi; sensurile pot avea număr diferit.</td></tr>
+            <tr><td>Parcare pe margine</td><td class="wrap">fără, dreapta, stânga, ambele</td><td class="wrap">Banda de parcare cu linie continuă și locurile trasate la 5,5 m.</td></tr>
+            <tr><td>Bordura stânga / dreapta</td><td class="wrap">normală, roșie, galbenă</td><td class="wrap">Bordura vopsită, ca în Los Santos (roșu = oprire interzisă).</td></tr>
+            <tr><td>Uzura asfaltului <span class="flag new">nou</span></td><td class="wrap">ca orașul, fără, puțină, normală, multă</td><td class="wrap">Decalurile jocului peste asfalt: pete de ulei pe mijlocul benzilor (mai dese înainte de intersecție), fisuri, petice, margine ruptă lângă bordură, capace de canal, guri de scurgere la colțuri. Doar cu texturi GTA; se văd de la ~120 m.</td></tr>
+            <tr><td>Linie de stop</td><td>la capătul a, la b</td><td class="wrap">Linie albă de 40 cm pe sensul care intră în intersecție.</td></tr>
+            <tr><td>Trecere</td><td class="wrap">automat, zebra, două linii, fără</td><td class="wrap">Automat = zebra la intersecțiile cu 3 sau mai multe străzi.</td></tr>
+            <tr><td>Săgeți</td><td class="wrap">fără, înainte, stânga pe banda din mijloc, dreapta pe banda de lângă trotuar, pe benzi</td><td class="wrap">Săgeți la 6 m de intersecție, câte una pe fiecare bandă. „Pe benzi” = stânga, înainte, dreapta.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><span class="ui">Ca tipul strazii</span> șterge marcajele puse pe stradă.</p>
+
+      <h3 id="poduri">Poduri și tuneluri <span class="flag new">nou</span></h3>
+      <p>Pui strada pe nivelul <span class="ui">pod</span> sau <span class="ui">tunel</span> (în cardul ei, sau desenând-o cu <kbd>PageUp</kbd> /
+        <kbd>PageDown</kbd>: peste +4 m iese pod, sub −4 m tunel). Dacă nodurile de la capete sunt <i>pe teren</i>, înălțimea lor se calculează singură:</p>
+      <ul>
+        <li><b>Pod peste stradă:</b> 6,6 m peste strada de dedesubt (5,5 m gabarit + 1,1 m grosimea podului).</li>
+        <li><b>Pod peste apă:</b> 7 m deasupra mării.</li>
+        <li><b>Tunel:</b> 8 m sub strada de deasupra.</li>
+        <li><b>Bucăți de pod fără nimic dedesubt</b> iau înălțimea bucății vecine, deci podul iese drept.</li>
+      </ul>
+      <p>Pe cardul nodului scrie cât a ieșit. Străzile de sol legate de un capăt ridicat sunt rampele: dacă sunt prea scurte pentru panta
+        maximă, apare o problemă care îți spune câți metri le trebuie („rampa r3 urcă 6,6 m pe 80 m: îi trebuie ~99 m”).</p>
+      <p><b>Profilul lateral</b> din cardul străzii arată strada (albastru) peste teren (verde). Tragi de punctele galbene de la capete ca să ridici
+        sau să cobori (<kbd>Shift</kbd> = fin). <span class="ui">Inaltimi automate</span> întoarce capetele la calcul.</p>
+
+      <h3 id="teren">Teren</h3>
+      <p>Unealta Teren (<kbd>T</kbd>) pictează dealurile. Tragi = ridici; ții apăsat pe loc = crește mai mult. <kbd>[</kbd> și <kbd>]</kbd> schimbă mărimea pensulei.</p>
+      <dl class="pairs">
+        <dt><kbd>1</kbd> Ridică</dt><dd>Dealul crește (cu <kbd>Shift</kbd> coboară).</dd>
+        <dt><kbd>2</kbd> Coboară</dt><dd>Văi, maluri.</dd>
+        <dt><kbd>3</kbd> Netezește</dt><dd>Pantele devin line (sau <kbd>Ctrl</kbd> din orice mod).</dd>
+        <dt><kbd>4</kbd> Platou</dt><dd>Aduce terenul la înălțimea de unde ai început să tragi (sau <kbd>Alt</kbd>).</dd>
+      </dl>
+      <p>Bifa <span class="ui">Arata relieful</span> colorează înălțimile și desenează curbe de nivel. În cvartale solul rămâne la cel mult 3 m de
+        străzile din jur; dealurile adevărate le faci ridicând străzile.</p>
+
+      <h3 id="zone">Zone și suprafețe</h3>
+      <p>Cu <kbd>Z</kbd> dai fiecărui cvartal o zonă; ea hotărăște ce se construiește acolo.</p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Zona</th><th>Ce pune generatorul</th></tr></thead>
+          <tbody>
+            <tr><td>Blocuri LC cărămidă</td><td class="wrap">Blocuri lipite, 4–7 etaje, cu magazine la parter, alei între ele, uneori rezervoare de apă pe acoperiș.</td></tr>
+            <tr><td>Centru / turnuri</td><td class="wrap">Turnuri de 10–20 etaje: hotel de cărămidă, birouri cu benzi de geam, turn de sticlă. O clădire din trei rămâne bloc obișnuit.</td></tr>
+            <tr><td>Blocuri-turn pe gazon</td><td class="wrap">Blocurile înalte și izolate din Bohan, 12–18 etaje, cu copaci între ele.</td></tr>
+            <tr><td>Case / suburbie</td><td class="wrap">Case și vile de 1–2 etaje, retrase de la stradă, cu gazon și copaci.</td></tr>
+            <tr><td>Industrial / port</td><td class="wrap">Hale cu rulouri și acoperiș de tablă, curte asfaltată.</td></tr>
+            <tr><td>Parc, piațetă, parcare</td><td class="wrap">Parc cu alei, bănci și copaci; piațetă pavată cu fântână; parcare cu locuri trasate.</td></tr>
+            <tr><td>Gol</td><td class="wrap">Doar curtea, fără nimic pe ea.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Cu <kbd>P</kbd> desenezi <b>suprafețe</b> colț cu colț (click pe primul colț, <kbd>Enter</kbd> sau dublu-click = gata): parc, piațetă,
+        parcare, teren de baschet, gazon cu copaci, apă (lac, râu, port) sau clădiri de un anumit fel (de exemplu blocuri doar pe o latură a unui cvartal
+        de case). Suprafețele au prioritate față de zona cvartalului: o parcare desenată peste un parc înlocuiește parcul acolo. Apa merge oriunde și
+        primește chei de beton; o suprafață de clădiri desenată în afara străzilor devine cvartal separat.</p>
+
+      <h3 id="cladiri-mana">Clădiri și props puse de mână</h3>
+      <p>Cu <kbd>K</kbd> alegi o clădire și dai click; se întoarce singură cu fața spre strada cea mai apropiată. Rotița o rotește, <kbd>Shift</kbd>
+        o pune exact unde e mouse-ul. Cvartalele o ocolesc la generare.</p>
+      <ul>
+        <li><b>Generate:</b> bloc de cărămidă, casă, vilă, magazin sau benzinărie, hală, secție de poliție, spital, turn de birouri (benzi de geam),
+          hotel de cărămidă (turn), turn de sticlă.</li>
+        <li><b>Din GTA:</b> caută în catalog (house, shop, midrise…) și pune clădirea originală a jocului, cu coliziune.</li>
+        <li><b>Clădirile care se vor genera</b> apar gri când bifezi <span class="ui">Arata cladirile care se vor genera</span>. Click pe una: o ștergi
+          (nu se mai pune, restul cvartalului rămâne la fel) sau o faci editabilă (devine clădire pusă de mână).</li>
+      </ul>
+      <p>Pensula (<kbd>B</kbd>) pictează props GTA: copaci, tufe, bănci, gunoaie și saci, tomberoane, mașini abandonate, containere de port, stâlpi de
+        iluminat, mobilier stradal, bariere și conuri, sport și picnic. Tragi = pictezi, <kbd>Shift</kbd> + tras = ștergi, <span class="ui">Cate unul</span>
+        = pui unul și îl rotești trăgând. Clădirile au prioritate: un copac pictat care cade în casă nu se pune, dar rămâne în plan.</p>
+
+      <h3 id="probleme">Probleme, fundal și setări</h3>
+      <ul>
+        <li><b>Probleme</b> (dreapta sus): unghiuri prea ascuțite, pante prea mari, rampe scurte, străzi care se taie fără nod. Click pe una te duce acolo;
+          <span class="ui">Repara automat</span> îndreaptă unghiurile și pune noduri la încrucișări.</li>
+        <li><b>Imagine de fundal:</b> o hartă sau o schiță (PNG, JPG) sub plan. Cu <kbd>F</kbd> o tragi, rotița o mărește, <kbd>Shift</kbd> + rotița o
+          rotește; în dreapta îi dai lățimea reală și opacitatea. <b>Importă plan</b> deschide un plan <span class="file">.json</span> primit de la altcineva.</li>
+        <li><b>Setările orașului:</b> seed-ul (alt seed = alte clădiri), texturile (GTA sau simple), uzura asfaltului pentru tot orașul (fiecare stradă o poate schimba din Marcaje), panta maximă, mobilierul stradal automat (stâlpi,
+          semafoare, hidranți, coșuri, automate de ziare, stații de autobuz) și cardul <span class="ui">In joc</span>.</li>
+      </ul>
+    </section>
+
+    <!-- ================================================================ generare -->
+    <section id="generare">
+      <p class="where">Butoanele de sus din editorul de oraș</p>
+      <h2>Generare și trimitere în joc</h2>
+      <dl class="pairs">
+        <dt><span class="ui">Genereaza orasul</span></dt>
+        <dd>Construiește orașul în Blender (<span class="file">output\orase\&lt;nume&gt;.blend</span>). Refolosește ce era făcut: se refac doar străzile,
+          intersecțiile, cvartalele, clădirile puse de mână, terenul și apa în care s-a schimbat ceva.</dd>
+        <dt><span class="ui">FiveM</span></dt>
+        <dd>Face resursa FiveM din orașul generat. Reconvertește doar modelele și celulele de coliziune schimbate și șterge fișierele rămase de data trecută.</dd>
+        <dt><span class="ui">Trimite in joc</span></dt>
+        <dd>Generare + FiveM dintr-o apăsare. La final, <code>rrp_mapeditor</code> vede exportul nou și repornește harta în joc, fără reconectare.
+          <span class="flag untested">netestat în joc</span></dd>
+        <dt><span class="ui">de la zero</span></dt>
+        <dd>Bifată, reface tot orașul și toată resursa. Folosește-o dacă ceva arată ciudat după mai multe generări la rând.</dd>
+        <dt><span class="ui">Blender</span></dt>
+        <dd>Deschide orașul generat în Blender, cu tot ce ai pus și ascuns în joc (colecția „Obiecte din joc”) și cu texturile alese în joc.</dd>
+      </dl>
+
+      <h3>Cât durează</h3>
+      <p>Timpi măsurați pe o copie a planului <code>bohanx</code> (156 de străzi, 304 bucăți, aproape 1.200 de modele):</p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Pas</th><th>Timp</th><th>Ce s-a refăcut</th></tr></thead>
+          <tbody>
+            <tr><td>Generare de la zero</td><td class="num">399 s</td><td class="wrap">Tot: 304 bucăți.</td></tr>
+            <tr class="fast"><td>Generare, nimic schimbat</td><td class="num">29 s</td><td class="wrap">Nimic; toate cele 304 bucăți refolosite.</td></tr>
+            <tr class="fast"><td>Generare, un cvartal schimbat</td><td class="num">39 s</td><td class="wrap">2 bucăți (cvartalul și props-urile pictate).</td></tr>
+            <tr><td>Export FiveM de la zero</td><td class="num">222 s</td><td class="wrap">1.175 de modele, 22 de fișiere de coliziune.</td></tr>
+            <tr class="fast"><td>Export FiveM după o schimbare</td><td class="num">49 s</td><td class="wrap">43 de modele și 2 fișiere de coliziune; 33 de fișiere vechi șterse.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Pe scurt: după o schimbare mică, <span class="ui">Trimite in joc</span> te duce în joc în circa un minut și jumătate.</p>
+
+      <h3>Ce primești în joc</h3>
+      <ul>
+        <li>Orașul la poziția din cardul <span class="ui">In joc</span>, cu coliziune pe tot ce e construit.</li>
+        <li>Harta orașului pe radar și pe harta mare.</li>
+        <li>GPS pe străzile tale: pui un waypoint în oraș și primești traseul pe străzile desenate.</li>
+        <li>Clădirile se văd de la 600 m, turnurile de la 1.200 m, terenul de la 1.500 m.</li>
+      </ul>
+      <div class="aside">
+        <p>Dacă vezi încă o clădire veche după <span class="ui">Trimite in joc</span>, depărtează-te puțin: jocul ține în memorie un model deja încărcat
+          până iese din zona de afișare.</p>
+      </div>
+    </section>
+
+    <!-- ================================================================ cladiri -->
+    <section id="cladiri">
+      <p class="where">Făcute de generator, după zona cvartalului</p>
+      <h2>Clădirile generate</h2>
+      <p>Fiecare clădire își alege detaliile după seed-ul ei, deci două vecine nu arată la fel.</p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Tip</th><th>Unde apare</th><th>Ce variază</th></tr></thead>
+          <tbody>
+            <tr><td>Bloc</td><td class="wrap">Blocuri LC, blocuri-turn, o parte din centru</td><td class="wrap">Balcoane pe coloane sau în bandă (grilaj, parapet plin, sticlă), ultimul etaj retras cu terasă, brâuri pe etaje, pilaștri, aparate AC sub ferestre, rezervor de apă, guri de aerisire și antene pe acoperiș.</td></tr>
+            <tr><td>Turn: hotel</td><td class="wrap">Centru</td><td class="wrap">Cărămidă cu bază de piatră și vitrine, ultimele etaje deschise la culoare, cornișă grea, firmă pe acoperiș, scară de incendiu pe o latură.</td></tr>
+            <tr><td>Turn: birouri</td><td class="wrap">Centru</td><td class="wrap">Plăci de beton ieșite la fiecare etaj, benzi de geam cu montanți, parter retras pe stâlpi, uneori ultimele etaje în trepte, cu terase.</td></tr>
+            <tr><td>Turn: sticlă</td><td class="wrap">Centru</td><td class="wrap">Perete cortină pe panouri, soclu de piatră, vârf mai îngust cu aripioare și antenă.</td></tr>
+            <tr><td>Vilă</td><td class="wrap">Suburbie</td><td class="wrap">Balcon cu baluștri deasupra intrării, uneori pe coloane; pietre de colț, acoperiș în patru ape, obloane.</td></tr>
+            <tr><td>Casă</td><td class="wrap">Suburbie</td><td class="wrap">Verandă cu stâlpi sau copertină la ușă, garaj, obloane, balcon mic la cele cu etaj.</td></tr>
+            <tr><td>Magazin</td><td class="wrap">Pus de mână</td><td class="wrap">Vitrine, copertine, firmă, pilaștri, antenă.</td></tr>
+            <tr><td>Hală</td><td class="wrap">Industrial</td><td class="wrap">Rulouri, ferestre sus, acoperiș de tablă.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><b>Texturile variază pe cvartal:</b> iarba, trotuarul și asfaltul curților își aleg altă variantă GTA în fiecare cvartal, iar plăcile sunt
+        rotite, ca repetiția să nu se alinieze. Străzile păstrează același asfalt peste tot.</p>
+    </section>
+
+    <!-- ================================================================ joc -->
+    <section id="joc">
+      <p class="where">În joc · /mapeditor</p>
+      <h2>Editorul din joc</h2>
+      <p><code>/mapeditor</code> îl pornește și îl oprește. Pornește cu mouse-ul liber, ca un editor de jocuri:</p>
+      <dl class="pairs">
+        <dt>Cursor</dt><dd>Mouse-ul e liber: click în lume, panourile din stânga și dreapta.</dd>
+        <dt>Click dreapta ținut</dt><dd>Zbori cât ții butonul (WASD, mouse-ul rotește); la eliberare revii la cursor. Un click dreapta scurt anulează.</dd>
+        <dt><kbd>Tab</kbd></dt><dd>Zbor cu țintă în mijlocul ecranului, până la <kbd>Tab</kbd> sau <kbd>Esc</kbd>.</dd>
+      </dl>
+      <p>În zbor: <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> te miști, <kbd>Shift</kbd> = rapid, <kbd>Space</kbd> / <kbd>Ctrl</kbd> = sus / jos.</p>
+      <p><b>Bara de sus</b> are modul de selecție (<span class="ui">Auto</span>, <span class="ui">Suprafete</span>, <span class="ui">Pensula</span>), cursor / zbor,
+        lipirile (<span class="ui">Sol</span>, <span class="ui">Lipire</span>, <span class="ui">Perete</span>, <span class="ui">Linie</span>), grila și pasul de rotire,
+        copiere / lipire, <span class="ui">Undo</span> și <span class="ui">Export</span>. <b>Stânga:</b> Assets (<span class="ui">GTA</span>,
+        <span class="ui">Ale mele</span>, <span class="ui">Harta</span>), Outliner și Texturi. <b>Dreapta:</b> Inspectorul.</p>
+
+      <h3 id="pui">Pui obiecte</h3>
+      <p>Click pe un model din Assets (sau scrii un nume în câmpul liber și <span class="ui">Arma</span>): obiectul vine în mână, transparent, și urmărește mouse-ul.</p>
+      <ul>
+        <li>Click = îl pui; <kbd>Shift</kbd> + click = îl pui și îl păstrezi în mână pentru următorul. Click dreapta = renunți.</li>
+        <li>Rotița sau <kbd>Q</kbd> / <kbd>E</kbd> = rotești; <kbd>Alt</kbd> + rotița sau <kbd>PageUp</kbd> / <kbd>PageDown</kbd> = înălțimea; <kbd>R</kbd> = resetezi.
+          <kbd>Shift</kbd> = pas fin. Butoanele laterale ale mouse-ului schimbă pasul de rotire.</li>
+        <li><kbd>G</kbd> = lipire de sol, <kbd>L</kbd> = capetele se lipesc de capetele obiectelor puse (garduri, ziduri, punct verde), <kbd>T</kbd> = se
+          aliniază la peretele sau obiectul de sub cursor. Grila de poziție o alegi sus.</li>
+        <li><b>Ale mele:</b> folderele tale de modele și prefaburi. Selectezi mai multe obiecte (<kbd>Ctrl</kbd> + click) și
+          <span class="ui">Prefab din selectie</span> le salvează ca un singur obiect de pus. <span class="ui">+</span> lângă orice model îl adaugă în folderul ales.</li>
+        <li><b>Harta:</b> modelele orașului generat, pe zone (Parc 2, Clădiri LC 5…) sau pe tipuri.</li>
+      </ul>
+
+      <h3 id="modifici">Selectezi și modifici</h3>
+      <ul>
+        <li>Click pe un obiect îl selectează și îl arată în stânga, în folderul lui din Outliner; <kbd>Ctrl</kbd> + click adaugă la selecție.</li>
+        <li><kbd>M</kbd> = îl muți (vine în mână), <kbd>Q</kbd> / <kbd>E</kbd> = îl rotești, <kbd>C</kbd> sau <kbd>Ctrl</kbd> <kbd>D</kbd> = o copie în dreapta,
+          <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>D</kbd> = în stânga, <kbd>Ctrl</kbd> <kbd>C</kbd> / <kbd>Ctrl</kbd> <kbd>V</kbd> = copiezi și lipești,
+          <kbd>Delete</kbd> = ștergi, <kbd>F</kbd> = te uiți la el, <kbd>Ctrl</kbd> <kbd>Z</kbd> = anulezi.</li>
+        <li>În Inspector: poziția și rotația (scrii valoarea sau tragi de litera X / Y / Z), distanța de afișare (LOD) și
+          <span class="ui">Duplica in linie</span>: câte copii, în ce direcție.</li>
+      </ul>
+
+      <h3 id="generate">Obiectele orașului generat</h3>
+      <p>Clădirile, copacii și mobilierul făcute de generator fac parte din hartă, deci nu se mută direct. Click pe unul îl arată în Inspector cu eticheta
+        <span class="ui">generat</span> și îl deschide în stânga, în fila Harta:</p>
+      <ul>
+        <li><kbd>Delete</kbd> = îl ascunzi (rămâne ascuns și după export; <kbd>Ctrl</kbd> <kbd>Z</kbd> îl aduce înapoi).</li>
+        <li><kbd>M</kbd>, <kbd>Q</kbd> / <kbd>E</kbd>, <kbd>C</kbd> = originalul se ascunde și în locul lui rămâne o copie a editorului, pe care o muți,
+          rotești sau dublezi.</li>
+        <li>La clădiri, <span class="ui">Texturi</span> deschide rolurile materialelor ei (vezi mai jos).</li>
+      </ul>
+
+      <h3 id="texturi">Texturi pe suprafețe și clădiri <span class="flag new">nou</span></h3>
+      <p>În modul <span class="ui">Auto</span>, un click pe asfalt, trotuar, curte, parc sau teren deschide texturile acelei suprafețe. Modul
+        <span class="ui">Suprafete</span> (<kbd>B</kbd>) le alege doar pe ele, și clădirile, fără obiecte. Chenarul verde arată ce e selectat.</p>
+      <p>Panoul are fiecare <b>rol</b> al materialelor (iarbă, alei, perete, acoperiș…): miniatura texturii de acum și a celei alese, materialul,
+        textura, normal map-ul, shader-ul, scara (metri pe o repetare), familia din paletă și numărul de fețe. Starea rolului e <i>original</i>,
+        <i>ales, așteaptă exportul</i> sau <i>schimbat (exportat)</i>.</p>
+      <dl class="pairs">
+        <dt><span class="ui">Alege textura</span></dt><dd>Grila cu cele 680 de texturi GTA ale paletei (tot ce e extras în biblioteca GTA), pe familii (iarbă, pământ, pavaj, asfalt, cărămidă, lemn, metal, altele,
+          tencuială, acoperiș), cu căutare. Mouse peste o textură = o vezi în joc (după modul de previzualizare); click = o alegi.</dd>
+        <dt><span class="ui">Previzualizare</span></dt><dd>Cum vezi textura de sub mouse înainte de export. <b>Lumina reală</b> (implicit): cu lumini și normal map,
+          dar pe <b>toată harta</b>, peste tot unde e folosită textura veche; click o ține așa până închizi editorul. <b>Doar pe obiect</b>: desenată numai pe
+          obiectul ales, fără lumini, la cel mult 60 m de tine — a crăpat jocul de două ori, folosește-o doar dacă ai nevoie. <b>Fără</b>: nimic până la export.</dd>
+        <dt><span class="ui">Scala</span></dt><dd>Cât de mare apare textura, în metri pe o repetare.</dd>
+        <dt><span class="ui">Lumina reala</span></dt><dd>Pune textura aleasă cu lumini și normal map pe <b>toată harta</b>, până închizi editorul (util în modul
+          „doar pe obiect”).</dd>
+        <dt><span class="ui">Revino la original</span></dt><dd>Scoate textura aleasă pe rolul acela.</dd>
+      </dl>
+      <p>Fila <span class="ui">Texturi</span> din stânga le arată pe toate cele alese; click te duce la obiect, ✕ le scoate. Alegerile se salvează singure.
+        <b>Aplica in harta</b> (în fila Texturi sau jos în inspector) le pune în hartă doar pe obiectele alese, cu lumina și scala reale: editorul
+        de oraș (<span class="file">EDITOR_ORAS.bat</span>) trebuie să ruleze; exportul durează cam un minut, apoi harta se reîncarcă singură.
+        Același lucru îl fac <span class="ui">FiveM</span> sau <span class="ui">Trimite in joc</span> din editorul de oraș. Butonul
+        <span class="ui">Export</span> din joc nu le aplică. <b>Scala</b> se salvează, dar se vede abia în hartă.</p>
+
+      <h3 id="kituri">Kituri de detaliu, linie și perete <span class="flag new">nou</span></h3>
+      <p>În <span class="ui">Ale mele</span>, grupul <span class="ui">Kituri de detaliu</span>: grupuri gata făcute din props GTA, puse ca un singur obiect.
+        Fiecare piesă se mută și se rotește puțin la întâmplare, ca două kituri alăturate să nu arate copiate.</p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Kit</th><th>Ce conține</th></tr></thead>
+          <tbody>
+            <tr><td>Alee din spate</td><td class="wrap">Tomberon, saci de gunoi, cutii, palet.</td></tr>
+            <tr><td>Colț de stradă</td><td class="wrap">Hidrant, coș, automate de ziare, cutie poștală.</td></tr>
+            <tr><td>Terasă</td><td class="wrap">Două mese cu scaune și umbrele.</td></tr>
+            <tr><td>Șantier</td><td class="wrap">Bariere, conuri, lampă de lucru, semn.</td></tr>
+            <tr><td>Gunoi pe trotuar</td><td class="wrap">Saci și cutii lângă un coș.</td></tr>
+            <tr><td>Curte de depozit</td><td class="wrap">Lăzi, paleți, butoaie, cutii.</td></tr>
+            <tr><td>Stâlp de curent</td><td class="wrap">Stâlp de lemn; pentru un șir, folosește Linie.</td></tr>
+            <tr><td>Aparat AC (pe perete)</td><td class="wrap">Se lipește singur de peretele de sub cursor.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <dl class="pairs">
+        <dt><kbd>J</kbd> Perete</dt><dd>Obiectul din mână stă pe peretele de sub cursor, cu fața în afară, la înălțimea atinsă. Aparatele AC, firmele și
+          lămpile de perete o fac singure, fără <kbd>J</kbd>.</dd>
+        <dt><kbd>N</kbd> Linie</dt><dd>Cu un model în mână: click la un capăt, click la celălalt, și modelul se pune cap la cap între ele, întors după linie
+          (garduri, gard viu, stâlpi, borduri). Tot șirul e un singur <kbd>Ctrl</kbd> <kbd>Z</kbd>.</dd>
+      </dl>
+
+      <h3 id="pensula">Pensula din joc</h3>
+      <p><kbd>V</kbd> sau <span class="ui">Pensula</span>. Alegi ce pictezi (toată vegetația, copaci, tufișuri și gard viu, iarbă și flori, pietre, gunoi,
+        șantier, anvelope, butoaie și lăzi, lemne, bănci și coșuri; lângă fiecare, câte modele are în catalog), bifezi modelele, apoi raza, desimea
+        (obiecte la 100 m²) și distanța minimă dintre ele.</p>
+      <ul>
+        <li>Click ținut = pictezi; <kbd>Shift</kbd> + click ținut = ștergi, doar obiectele pictate.</li>
+        <li>O apăsare = un singur <kbd>Ctrl</kbd> <kbd>Z</kbd>.</li>
+        <li>Nu pune pe străzi, trotuare și clădiri. Ce pictezi intră în Outliner în folderul „Pictate: &lt;set&gt;”.</li>
+        <li><kbd>V</kbd> sau <kbd>Esc</kbd> ies din pensulă.</li>
+      </ul>
+
+      <h3 id="export-joc">Export din joc</h3>
+      <p>Obiectele puse în joc apar imediat pentru toți jucătorii (sunt create de script). <span class="ui">Export</span> sau <code>/mapexport</code> le
+        „coace” în harta <span class="file">&lt;harta&gt;_custom.ymap</span>, ca să nu mai fie create de script. După el rulezi
+        <code>restart &lt;harta&gt;</code> în consola serverului și te reconectezi. <code>/mapreload</code> recitește fișierele editorului de pe disc.</p>
+    </section>
+
+    <!-- ================================================================ taste -->
+    <section id="taste">
+      <h2>Toate tastele</h2>
+      <div class="two">
+        <div>
+          <h4>Editorul de oraș</h4>
+          <div class="scroll">
+            <table>
+              <tbody>
+                <tr><td><kbd>V</kbd> <kbd>R</kbd> <kbd>C</kbd> <kbd>T</kbd> <kbd>H</kbd></td><td class="wrap">Selectează, Stradă, Curbează, Teren, Înălțime</td></tr>
+                <tr><td><kbd>Z</kbd> <kbd>P</kbd> <kbd>B</kbd> <kbd>K</kbd> <kbd>F</kbd> <kbd>X</kbd></td><td class="wrap">Zonă, Suprafață, Pensulă, Clădire, Fundal, Șterge</td></tr>
+                <tr><td><kbd>1</kbd>–<kbd>4</kbd></td><td class="wrap">Modul străzii sau al terenului</td></tr>
+                <tr><td><kbd>PageUp</kbd> <kbd>PageDown</kbd></td><td class="wrap">Înălțimea străzii următoare (pod / tunel)</td></tr>
+                <tr><td><kbd>Shift</kbd> <kbd>Ctrl</kbd> <kbd>Alt</kbd></td><td class="wrap">La străzi: fără unghi, grilă 5 m, fără lipire. La teren: coboară, netezește, platou</td></tr>
+                <tr><td><kbd>[</kbd> <kbd>]</kbd></td><td class="wrap">Mărimea pensulei de teren</td></tr>
+                <tr><td><kbd>Enter</kbd> / <kbd>Esc</kbd></td><td class="wrap">Gata / un pas înapoi</td></tr>
+                <tr><td><kbd>Delete</kbd></td><td class="wrap">Șterge ce e selectat</td></tr>
+                <tr><td><kbd>Tab</kbd> <kbd>Home</kbd></td><td class="wrap">2D / 3D, vezi tot</td></tr>
+                <tr><td><kbd>Ctrl</kbd> <kbd>Z</kbd> / <kbd>Y</kbd></td><td class="wrap">Anulează / refă</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <h4>Editorul din joc</h4>
+          <div class="scroll">
+            <table>
+              <tbody>
+                <tr><td>Click dreapta ținut</td><td class="wrap">Zbor temporar</td></tr>
+                <tr><td><kbd>Tab</kbd> / <kbd>Esc</kbd></td><td class="wrap">Zbor cu țintă / înapoi la cursor</td></tr>
+                <tr><td><kbd>B</kbd> <kbd>V</kbd></td><td class="wrap">Suprafețe, pensulă</td></tr>
+                <tr><td><kbd>J</kbd> <kbd>N</kbd></td><td class="wrap">Pe perete, linie</td></tr>
+                <tr><td><kbd>G</kbd> <kbd>L</kbd> <kbd>T</kbd></td><td class="wrap">Lipire de sol, de capete, aliniere</td></tr>
+                <tr><td><kbd>Q</kbd> <kbd>E</kbd> <kbd>R</kbd></td><td class="wrap">Rotește, resetează ce ai în mână</td></tr>
+                <tr><td><kbd>M</kbd> <kbd>C</kbd> <kbd>F</kbd></td><td class="wrap">Mută, copie alături, focus</td></tr>
+                <tr><td><kbd>Ctrl</kbd> <kbd>C</kbd> <kbd>V</kbd> <kbd>D</kbd></td><td class="wrap">Copiază, lipește, duplică</td></tr>
+                <tr><td><kbd>Alt</kbd> + rotița</td><td class="wrap">Înălțimea obiectului din mână</td></tr>
+                <tr><td><kbd>Delete</kbd> <kbd>Ctrl</kbd> <kbd>Z</kbd></td><td class="wrap">Șterge / ascunde, anulează</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================ fisiere -->
+    <section id="fisiere">
+      <h2>Fișiere și setări server</h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Fișier</th><th>Ce ține</th></tr></thead>
+          <tbody>
+            <tr><td><span class="file">output\orase\&lt;nume&gt;.json</span></td><td class="wrap">Planul desenat. Îl poți copia sau trimite cuiva.</td></tr>
+            <tr><td><span class="file">output\orase\&lt;nume&gt;.blend</span></td><td class="wrap">Orașul generat; generarea următoare pleacă de la el.</td></tr>
+            <tr><td><span class="file">&lt;resursa&gt;\editor\objects.json</span></td><td class="wrap">Obiectele puse și ascunse din <code>/mapeditor</code>.</td></tr>
+            <tr><td><span class="file">&lt;resursa&gt;\editor\overrides.json</span></td><td class="wrap">Texturile alese în joc.</td></tr>
+            <tr><td><span class="file">&lt;resursa&gt;\editor\entities.json</span></td><td class="wrap">Ce a pus generatorul (îl scrie exportul; editorul din joc îl citește).</td></tr>
+            <tr><td><span class="file">&lt;resursa&gt;\editor\export_cache.json</span></td><td class="wrap">Ce a exportat data trecută. Dacă îl ștergi, următorul export e complet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Setare în server.cfg</th><th>Implicit</th><th>Ce face</th></tr></thead>
+          <tbody>
+            <tr><td><code>rrp_map_resource</code></td><td>dzdemo</td><td class="wrap">Harta pe care o editează <code>/mapeditor</code> (de ex. <code>oras_bohanx</code>).</td></tr>
+            <tr><td><code>rrp_map_autorestart</code></td><td>1</td><td class="wrap"><code>0</code> oprește repornirea automată a hărții după un export.</td></tr>
+            <tr><td><code>rrp_map_runtime_objects</code></td><td>1</td><td class="wrap"><code>0</code> nu mai creează prin script obiectele deja coapte în hartă.</td></tr>
+            <tr><td><code>rrp_map_generator_dir</code></td><td class="wrap">folderul generatorului</td><td class="wrap">Unde caută <code>/mapexport</code> scriptul de export.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================================================================ netestat -->
+    <section id="netestat">
+      <h2>Ce e încă netestat</h2>
+      <p>Toate uneltele de mai sus compilează și au trecut testele în afara jocului. Următoarele depind de joc și n-au fost încercate acolo:</p>
+      <ul>
+        <li><span class="flag untested">netestat</span> <b>Repornirea automată a hărții</b> după <span class="ui">Trimite in joc</span>: dacă nu merge, rulezi
+          <code>restart oras_&lt;nume&gt;</code> în consola serverului.</li>
+        <li><span class="flag untested">netestat</span> <b>Previzualizarea texturii pe un singur obiect</b> a crăpat jocul de două ori (GTA5.exe+4E5500), pe
+          gazonul unui cvartal și al unui parc; cauza nu e găsită. De aceea implicit e „lumina reală”. Dacă și așa crapă, treci pe „fără” și spune-mi.</li>
+        <li><span class="flag untested">netestat</span> <b>Câteva modele din kituri</b> (aparatul AC, cutia poștală, masa, stâlpul de curent) au nume standard GTA,
+          neverificate. Dacă unul lipsește, piesa lui se sare și primești un mesaj cu numele ei.</li>
+        <li><span class="flag untested">netestat</span> <b>Lipirea de perete</b> pe clădirile originale ale jocului (cele fără entitate de script).</li>
+      </ul>
+      <div class="aside warn">
+        <p>Dacă ceva iese stricat după mai multe generări la rând, bifează <span class="ui">de la zero</span> și apasă din nou
+          <span class="ui">Trimite in joc</span>. Detaliile exportului sunt în jurnalul din pagină și în
+          <span class="file">output\fivem_export\&lt;nume&gt;\export.log</span>.</p>
+      </div>
+    </section>
+  </main>
+</div>

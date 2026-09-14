@@ -83,6 +83,8 @@ def main():
     ap.add_argument("--config", default=str(HERE / "map.json"), help="fisierul map.json")
     ap.add_argument("--out", default=None, help="folderul resursei in care se scrie (implicit cel din map.json)")
     ap.add_argument("--objects", default=None, help="alt fisier objects.json (pentru teste)")
+    ap.add_argument("--name", default=None,
+                    help="numele hartii din resursa (<nume>_custom.ymap); editorul din joc da numele resursei")
     ap.add_argument("--dry-run", action="store_true", help="doar afiseaza ce ar face")
     args = ap.parse_args()
 
@@ -127,6 +129,9 @@ def main():
             print(f"ATENTIE: map.json spune name={cfg.name}, dar resursa contine harta "
                   f"'{chunks_data['name']}' - folosesc numele din resursa.")
             cfg.name = chunks_data["name"]
+    if args.name:
+        # orasele din editorul de oras nu au chunks.json: numele vine de la editorul din joc (= resursa)
+        cfg.name = args.name
 
     stream.mkdir(parents=True, exist_ok=True)
     items = G.custom_items(cfg, objects)

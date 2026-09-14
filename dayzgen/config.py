@@ -33,6 +33,26 @@ class MapConfig:
     road_half_width: float = 3.2
     fields_per_village: tuple = (1, 2)
 
+    # --- oras (stratul urban, dayzgen/city/) ---
+    city: bool = False                  # true = genereaza un oras peste teren
+    city_center: tuple = (0.5, 0.5)     # centrul orasului, ca fractiune din latura hartii
+    city_radius: float = 250.0          # raza zonei construite (m)
+    city_angle: float = -1.0            # orientarea gridului stradal (grade); negativ = aleator
+    city_block: float = 92.0            # latura medie a unui cvartal (m) = pasul gridului
+    city_artery_every: int = 4          # la cate linii de grid o artera
+    city_width_artery: float = 15.0     # latimea totala a carosabilului (m)
+    city_width_collector: float = 9.5
+    city_width_local: float = 6.5
+    city_sidewalk: float = 2.8          # latimea trotuarului de fiecare parte (m)
+    city_max_grade: float = 0.085       # panta maxima a unei strazi (8.5%); peste asta cladirile se rup
+    city_lot_depth: float = 26.0        # adancimea implicita a unui lot (m)
+    city_lot_width: float = 18.0        # latimea implicita a unui lot la strada (m)
+    city_warp: float = 0.16             # cat de mult se "indoaie" gridul (fractiune din city_block)
+    city_zone_noise: float = 0.30       # cat de neregulate sunt granitele dintre zone
+    # Grila de zone pictata manual in studio (lista de liste, orice rezolutie).
+    # 0 = lasa zonarea automata; 1..6 = downtown/midtown/residential/suburb/industrial/park.
+    city_zones_painted: tuple = ()
+
     # --- vegetatie (densitati: 1 obiect la N m^2) ---
     forest_coverage: float = 0.42          # fractiunea aproximativa de padure
     tree_spacing: float = 6.0              # distanta medie intre copaci in padure (m)
@@ -77,6 +97,20 @@ class MapConfig:
             "name trebuie sa fie litere mici, fara spatii"
         assert self.num_villages >= 0, "num_villages nu poate fi negativ"
         assert self.max_height > 0, "max_height trebuie sa fie pozitiv"
+        if self.city:
+            assert self.city_radius > 60.0, "city_radius prea mic (minim 60 m)"
+            assert self.city_block >= 40.0, "city_block prea mic (minim 40 m)"
+            assert self.city_artery_every >= 2, "city_artery_every trebuie sa fie >= 2"
+            assert 0.01 <= self.city_max_grade <= 0.3, "city_max_grade realist: 0.02 .. 0.2"
+            assert self.city_lot_width >= 6.0 and self.city_lot_depth >= 8.0, \
+                "loturile trebuie sa aiba minim 6x8 m"
+            assert 0.0 <= self.city_warp <= 0.3, "city_warp: 0 .. 0.3"
+            # Cvartalul trebuie sa incapa: strada + trotuare + doua rAnduri de loturi minime.
+            # Adancimea tinta (`city_lot_depth`) se strAnge singura daca nu incape.
+            widest = max(self.city_width_artery, self.city_width_collector, self.city_width_local)
+            assert widest + 2 * self.city_sidewalk + 2 * 8.0 < self.city_block, \
+                (f"city_block ({self.city_block:.0f} m) e prea mic: strada de {widest:.0f} m "
+                 f"+ trotuare + doua rAnduri de loturi de minim 8 m nu incap")
 
     # ------------------------------------------------------------------ map.json
     def to_dict(self) -> dict:

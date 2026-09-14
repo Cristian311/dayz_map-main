@@ -47,6 +47,12 @@ class World:
         self.w_g = None      # canalul verde al mastii de teren
         self.w_b = None      # canalul albastru
         self.dominant = None  # 0 grass 1 dirt 2 rock 3 sand
+        # Masca orasului (dayzgen/city). Cat timp e None, nu exista oras si nimic nu se
+        # schimba; cand exista, casele de sat, cAmpurile si vegetatia o ocolesc.
+        self.city_mask = None
+        self.street_mask = None
+        self.park_mask = None
+        self.city = None     # CityPlan, daca cfg.city e pornit
         self.villages = []   # dict(center=(x,y), radius, name)
         self.roads = []      # np.ndarray (M,2) esantioane la ~2 m
         self.buildings = []  # Placed (kind="building")
@@ -75,6 +81,25 @@ class World:
 
     def height(self, x, y):
         return self.sample(self.h, x, y)
+
+    def in_city(self, x, y, margin: float = 0.0):
+        """
+        True unde e orasul (opional cu o margine de siguranta in metri).
+
+        Intoarce False peste tot cAnd nu exista oras, ca restul generatorului sa nu isi
+        schimbe comportamentul pe hartile fara oras.
+        """
+        if self.city_mask is None:
+            return np.zeros_like(np.asarray(x, dtype=np.float64), dtype=bool) if np.ndim(x) else False
+        hit = self.sample(self.city_mask.astype(np.float64), x, y) > 0.35
+        if margin > 0.0:
+            # verificam si un inel in jur, ca o casa sa nu se lipeasca de marginea orasului
+            ang = np.linspace(0, 2 * np.pi, 6, endpoint=False)
+            for a in ang:
+                hit = hit | (self.sample(self.city_mask.astype(np.float64),
+                                         np.asarray(x) + np.cos(a) * margin,
+                                         np.asarray(y) + np.sin(a) * margin) > 0.35)
+        return hit
 
     def _compute_slope(self):
         gy, gx = np.gradient(self.h, self.cfg.cell)
@@ -417,6 +442,8 @@ class World:
             return False
         if self.sample(self.road_dist, px, py) < cfg.road_half_width + rb + 0.5:
             return False
+        if self.in_city(px, py, rb + 6.0):
+            return False
         if any(math.hypot(px - qx, py - qy) < rb + qr + 3.0 for (qx, qy, qr) in placed_xy):
             return False
         return True
@@ -619,6 +646,10 @@ class World:
         forest *= smoothstep(2.0, 5.0, self.h)
         forest *= smoothstep(0.85, 0.6, self.slope)
         forest *= smoothstep(2.0, 6.0, self.building_dist)
+        # Fara padure in oras - in afara de parcuri, unde copacii sunt exact ce trebuie.
+        if self.city_mask is not None:
+            park = self.park_mask if self.park_mask is not None else np.zeros_like(self.city_mask)
+            forest = forest * np.where(self.city_mask & ~park, 0.0, 1.0)
         self.forest = forest
 
         def blocked(px, py, keep_village=False):
@@ -629,6 +660,14 @@ class World:
             ok = (rd > cfg.road_half_width + 1.5) & (bd > 2.5) & (hh > 0.6) & (fm < 0.5)
             if not keep_village:
                 ok &= self.sample(self.village_dist, px, py) > -5
+            if self.city_mask is not None:
+                # In oras nu creste nimic de la sine; in parcuri, da.
+                in_city = self.sample(self.city_mask.astype(np.float64), px, py) > 0.35
+                in_park = (self.sample(self.park_mask.astype(np.float64), px, py) > 0.35
+                           if self.park_mask is not None else False)
+                on_street = (self.sample(self.street_mask.astype(np.float64), px, py) > 0.2
+                             if self.street_mask is not None else False)
+                ok &= ~(in_city & ~in_park) & ~on_street
             return ~ok
 
         rng = self.rng
@@ -759,16 +798,58 @@ class World:
         self.log(f"  props sat: {len(self.props) - count0}")
 
     # ------------------------------------------------------------------ pipeline
+    def build_city(self):
+        """
+        Stratul urban (dayzgen/city), daca `cfg.city` e pornit.
+
+        Ruleaza dupa drumuri si inainte de case/cAmpuri/vegetatie: niveleaza terenul sub
+        oras si pune `city_mask` / `street_mask`, pe care restul generatorului le ocoleste.
+        """
+        if not getattr(self.cfg, "city", False):
+            return None
+        from .city.plan import CityPlan
+        self.city = CityPlan(self.cfg, self, rng=self.rng, log=self.log).build()
+        if self.city.plan is None:
+            self.city = None
+        return self.city
+
+    def clear_city_props(self):
+        """
+        Plasa de siguranta: scoate orice prop natural ramas pe carosabil sau in oras.
+
+        Fiecare rutina de plasare isi verifica singura conditiile, dar sunt multe si e usor
+        sa scape una. Un singur filtru la final garanteaza ca nu creste niciun copac in
+        mijlocul strazii, indiferent cine l-a pus acolo.
+        """
+        if self.city_mask is None or not self.props:
+            return 0
+        px = np.array([p.x for p in self.props], dtype=np.float64)
+        py = np.array([p.y for p in self.props], dtype=np.float64)
+        in_city = self.sample(self.city_mask.astype(np.float64), px, py) > 0.35
+        in_park = (self.sample(self.park_mask.astype(np.float64), px, py) > 0.35
+                   if self.park_mask is not None else np.zeros(len(px), dtype=bool))
+        on_street = (self.sample(self.street_mask.astype(np.float64), px, py) > 0.2
+                     if self.street_mask is not None else np.zeros(len(px), dtype=bool))
+        drop = (in_city & ~in_park) | on_street
+        if not drop.any():
+            return 0
+        self.props = [p for p, bad in zip(self.props, drop) if not bad]
+        removed = int(drop.sum())
+        self.log(f"  oras: {removed} props scoase de pe strazi / din cvartale")
+        return removed
+
     def generate(self):
         self.log("Generez lumea...")
         self.generate_heightmap()
         self.place_villages()
         self.build_roads()
+        self.build_city()
         self.place_buildings()
         self.place_fields()
         self.compute_layers()
         self.place_vegetation()
         self.place_village_props()
+        self.clear_city_props()
         # re-esantionam z-urile dupa toate nivelarile
         for p in self.props:
             p.z = float(self.height(p.x, p.y)) + (p.z - float(self.height(p.x, p.y)) if False else 0.0) - (
