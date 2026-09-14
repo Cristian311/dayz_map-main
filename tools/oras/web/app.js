@@ -461,7 +461,7 @@
             this.status = !r.ok ? 'exportul a esuat'
               : (r.incremental ? 'resursa FiveM e gata (' + r.changed_models + ' modele schimbate, ' + r.seconds + ' s)'
                 : 'resursa FiveM e gata: ' + r.res_dir)
-                + (j.chain ? '; harta se reporneste singura in joc (rrp_mapeditor)' : '');
+                + (j.chain ? '; harta se reporneste singura in joc (mapeditor)' : '');
           } else {
             this.lastFile = j.file;
             this.status = j.code === 0 ? 'orasul e gata: ' + j.file : 'generarea a esuat (cod ' + j.code + ')';
@@ -501,7 +501,7 @@
           .then(j => { this.log.push('Resursa: ' + j.resursa); this.pollLog(); })
           .catch(e => { this.generating = false; this.log.push('Eroare: ' + e.message); this.status = e.message; });
       },
-      // Genereaza + FiveM intr-un pas, doar ce s-a schimbat; rrp_mapeditor reporneste harta cand exportul e gata
+      // Genereaza + FiveM intr-un pas, doar ce s-a schimbat; mapeditor reporneste harta cand exportul e gata
       sendToGame() {
         this.generating = true; this.exportResult = null; this.job = null; this.lastFile = null;
         this.log = ['Trimit in joc: generez ce ai schimbat, export modelele schimbate, apoi harta se reporneste in joc...'];

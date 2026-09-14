@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
 Paleta de texturi GTA pentru editorul din joc (/mapeditor): toate texturile de suprafata din biblioteca extrasa
-(output/gta_asset_library/*.dds), pe familii, in cateva .ytd-uri streamate de rrp_mapeditor (fiecare sub 16 MB,
+(output/gta_asset_library/*.dds), pe familii, in cateva .ytd-uri streamate de mapeditor (fiecare sub 16 MB,
 limita de streaming FiveM). Editorul le pune in locul texturilor orasului cu AddReplaceTexture (previzualizare cu
 lumina reala); exportul orasului (tools/tex_overrides.py) ia textura aleasa tot din biblioteca, dupa nume.
 
 Scrie in resursa editorului:
-  stream/rrp_paleta.ytd, rrp_paleta_2.ytd, ...   texturile, 256 px DXT1 (~12 MB pe fisier)
+  stream/gtab_paleta.ytd, gtab_paleta_2.ytd, ...   texturile, 256 px DXT1 (~12 MB pe fisier)
   nui/paleta/<textura>.jpg                        miniaturile pentru grila din editor (96 px)
   paleta.json    {"familii": [{"id", "nume", "texturi": [{"tex", "scala", "normal", "txd"}]}]}
 
@@ -24,7 +24,7 @@ import numpy as np
 SCRIPT = Path(__file__).resolve()
 ROOT = SCRIPT.parent.parent
 LIB = ROOT / "output" / "gta_asset_library"
-TXD = "rrp_paleta"
+TXD = "gtab_paleta"
 SIZE, THUMB = 256, 96
 PER_TXD = 280           # 280 x 44 KB = ~12 MB pe .ytd (FiveM nu streameaza fisiere peste 16 MB)
 
@@ -106,7 +106,7 @@ def resources_dir() -> Path:
             return Path(cfg["fivem_resources_dir"])
     except (OSError, ValueError):
         pass
-    return Path(r"C:\FXServer\server-data\resources\[rrp]")
+    return Path(r"C:\FXServer\server-data\resources\[gta_bucuresti]")
 
 
 def known_scales() -> dict:
@@ -148,7 +148,7 @@ def family_of(tex: str) -> str:
 
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-    res = Path(argv[argv.index("--out") + 1]) if "--out" in argv else resources_dir() / "rrp_mapeditor"
+    res = Path(argv[argv.index("--out") + 1]) if "--out" in argv else resources_dir() / "mapeditor"
     for path in (ROOT / "tools", ROOT):
         if str(path) not in sys.path:
             sys.path.insert(0, str(path))

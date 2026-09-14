@@ -61,13 +61,13 @@ def read_verified(path: str = MEASUREMENTS_PATH) -> list:
 
 
 def copy_to_resource(path: str):
-    """Copie a listei in resursa rrp_mapeditor, ca serverul s-o gaseasca oricum."""
+    """Copie a listei in resursa mapeditor, ca serverul s-o gaseasca oricum."""
     import shutil
     try:
         from dayzgen import config as MC
         map_json = os.path.join(os.path.dirname(os.path.abspath(__file__)), "map.json")
         cfg = MC.MapConfig.from_json(map_json) if os.path.isfile(map_json) else MC.MapConfig()
-        resource = os.path.join(cfg.fivem_resources_dir, "rrp_mapeditor")
+        resource = os.path.join(cfg.fivem_resources_dir, "mapeditor")
         if not os.path.isdir(resource):
             return None
         target_dir = os.path.join(resource, "catalog")

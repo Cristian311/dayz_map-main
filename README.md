@@ -58,7 +58,7 @@ peste harta, atat pe radar cat si pe harta mare din pauza. Ambele fisiere sunt d
    - `dzdemo.blend` - scena Blender (poti edita/retusa cu Sollumz si re-exporta);
    - `textures\` - DDS + PNG de previzualizare.
 3. Instaleaza in serverul FiveM: copiaza `output\dzdemo\fivem\dzdemo` in `resources\` (de ex.
-   `resources\[rrp]\dzdemo`) si adauga `ensure dzdemo` in `server.cfg`. **Restart complet de server**
+   `resources\[gta_bucuresti]\dzdemo`) si adauga `ensure dzdemo` in `server.cfg`. **Restart complet de server**
    (nu ajunge `refresh` / `restart dzdemo`: fisierele de streaming si coliziunile `.ybn` se inregistreaza
    doar la pornire; si clientul trebuie sa reintre pe server). Resursa este o harta clasica de streaming
    (`this_is_a_map` + `DLC_ITYP_REQUEST` pentru arhetipurile custom), fara scripturi.
@@ -96,11 +96,11 @@ copie de referinta.
 ```json
 { "preset": "demo", "name": "dzdemo", "seed": 1337, "size": 1024.0,
   "origin_x": 7000.0, "origin_y": -8000.0,
-  "fivem_resources_dir": "C:\\FXServer\\server-data\\resources\\[rrp]",
+  "fivem_resources_dir": "C:\\FXServer\\server-data\\resources\\[gta_bucuresti]",
   "custom_objects_file": "editor/objects.json" }
 ```
 
-- `fivem_resources_dir` - unde se instaleaza resursa (implicit `C:\FXServer\server-data\resources\[rrp]`);
+- `fivem_resources_dir` - unde se instaleaza resursa (implicit `C:\FXServer\server-data\resources\[gta_bucuresti]`);
 - `custom_objects_file` - unde scrie editorul din joc, **relativ la folderul resursei instalate**.
 
 `.bat`-urile de generare adauga automat `--config map.json` daca fisierul exista. Din linia de comanda:
@@ -252,7 +252,7 @@ coliziunea in `.ybn`-ul nostru (faza C).
 CATALOG.bat --candidates        scrie dayzgen\data\candidates.json (~291.000 nume de incercat)
 ```
 
-apoi in joc, ca admin nivel 5 (resursa `rrp_mapeditor`):
+apoi in joc, ca admin nivel 5 (resursa `mapeditor`):
 
 ```
 /catalogscan          faza 1: intreaba jocul ce nume exista (IsModelInCdimage), cateva secunde
@@ -265,7 +265,7 @@ apoi in joc, ca admin nivel 5 (resursa `rrp_mapeditor`):
 ```
 
 Scanarea scrie `dayzgen\data\measurements.json` direct in folderul generatorului
-(calea vine din convarul `rrp_map_generator_dir`) si la final porneste singura
+(calea vine din convarul `gtab_map_generator_dir`) si la final porneste singura
 `make_catalog.py`, care clasifica si scrie `catalog.json`.
 
 Numele se obtin in trei feluri, combinate: prop-urile de mobilier urban sunt o lista fixa

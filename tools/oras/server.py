@@ -413,7 +413,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, analysis_for_web(self._body(), q.get("cladiri", ["0"])[0] == "1",
                                                         q.get("name", [None])[0]))
             if u.path == "/api/carari":
-                # unealta Carare din /mapeditor (prin rrp_mapeditor): adauga / sterge o carare, raspunde cu toate
+                # unealta Carare din /mapeditor (prin mapeditor): adauga / sterge o carare, raspunde cu toate
                 return self._send(200, carari_change(q.get("name", ["oras"])[0], self._body()))
             full = q.get("full", ["0"])[0] == "1"
             busy = {"eroare": "Blender lucreaza deja (generare sau export): asteapta sa termine"}
@@ -429,7 +429,7 @@ class Handler(BaseHTTPRequestHandler):
                     return self._send(409, busy)
                 return self._send(200, {"ok": True, "resursa": res})
             if u.path == "/api/build":
-                # Trimite in joc: generare (doar ce s-a schimbat), export (doar modelele schimbate), iar rrp_mapeditor
+                # Trimite in joc: generare (doar ce s-a schimbat), export (doar modelele schimbate), iar mapeditor
                 # vede editor/export_done.json si reporneste harta in joc
                 name = q.get("name", ["oras"])[0]
                 cmd, keep, result, res, _blend = export_job(name, full)

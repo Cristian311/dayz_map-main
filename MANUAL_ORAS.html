@@ -236,7 +236,7 @@ dl.pairs dd { margin: 0; }
           <tbody>
             <tr><td>Editorul de oraș</td><td><span class="file">EDITOR_ORAS.bat</span></td><td class="wrap">Străzi la orice unghi, poduri, teren, zone, suprafețe, clădiri și props puse de mână, marcaje. Butoanele de generare și export.</td></tr>
             <tr><td>Generatorul</td><td><span class="ui">Genereaza orasul</span></td><td class="wrap">Construiește planul în Blender: străzi cu trotuare și marcaje, intersecții, cvartale umplute după zonă, teren, apă, mobilier stradal.</td></tr>
-            <tr><td>Exportul FiveM</td><td><span class="ui">FiveM</span> sau <span class="ui">Trimite in joc</span></td><td class="wrap">Face resursa <span class="file">oras_&lt;nume&gt;</span> în <span class="file">resources\[rrp]</span>: modele, coliziuni, harta pe radar, GPS pe străzile tale.</td></tr>
+            <tr><td>Exportul FiveM</td><td><span class="ui">FiveM</span> sau <span class="ui">Trimite in joc</span></td><td class="wrap">Face resursa <span class="file">oras_&lt;nume&gt;</span> în <span class="file">resources\[gta_bucuresti]</span>: modele, coliziuni, harta pe radar, GPS pe străzile tale.</td></tr>
             <tr><td>Editorul din joc</td><td><code>/mapeditor</code></td><td class="wrap">Obiecte GTA puse de mână, kituri de detaliu, texturi pe suprafețe și clădiri, pensulă de vegetație și gunoi.</td></tr>
           </tbody>
         </table>
@@ -262,7 +262,7 @@ dl.pairs dd { margin: 0; }
       </ol>
       <div class="aside">
         <p><b>Editorul din joc</b> (<code>/mapeditor</code>) cere admin de nivel 5, pus pe duty. Harta pe care o editează e cea din
-          <code>rrp_map_resource</code> (vezi <a href="#fisiere">setările serverului</a>).</p>
+          <code>gtab_map_resource</code> (vezi <a href="#fisiere">setările serverului</a>).</p>
         <p><b>După o actualizare a uneltelor:</b> închizi și redeschizi <span class="file">EDITOR_ORAS.bat</span> și dai restart la server.
           Prima generare de după o actualizare se face de la zero: generatorul vede că i s-a schimbat codul și nu mai refolosește nimic. E normal.</p>
       </div>
@@ -421,7 +421,7 @@ dl.pairs dd { margin: 0; }
         <dt><span class="ui">FiveM</span></dt>
         <dd>Face resursa FiveM din orașul generat. Reconvertește doar modelele și celulele de coliziune schimbate și șterge fișierele rămase de data trecută.</dd>
         <dt><span class="ui">Trimite in joc</span></dt>
-        <dd>Generare + FiveM dintr-o apăsare. La final, <code>rrp_mapeditor</code> vede exportul nou și repornește harta în joc, fără reconectare.
+        <dd>Generare + FiveM dintr-o apăsare. La final, <code>mapeditor</code> vede exportul nou și repornește harta în joc, fără reconectare.
           <span class="flag untested">netestat în joc</span></dd>
         <dt><span class="ui">de la zero</span></dt>
         <dd>Bifată, reface tot orașul și toată resursa. Folosește-o dacă ceva arată ciudat după mai multe generări la rând.</dd>
@@ -661,10 +661,10 @@ dl.pairs dd { margin: 0; }
         <table>
           <thead><tr><th>Setare în server.cfg</th><th>Implicit</th><th>Ce face</th></tr></thead>
           <tbody>
-            <tr><td><code>rrp_map_resource</code></td><td>dzdemo</td><td class="wrap">Harta pe care o editează <code>/mapeditor</code> (de ex. <code>oras_bohanx</code>).</td></tr>
-            <tr><td><code>rrp_map_autorestart</code></td><td>1</td><td class="wrap"><code>0</code> oprește repornirea automată a hărții după un export.</td></tr>
-            <tr><td><code>rrp_map_runtime_objects</code></td><td>1</td><td class="wrap"><code>0</code> nu mai creează prin script obiectele deja coapte în hartă.</td></tr>
-            <tr><td><code>rrp_map_generator_dir</code></td><td class="wrap">folderul generatorului</td><td class="wrap">Unde caută <code>/mapexport</code> scriptul de export.</td></tr>
+            <tr><td><code>gtab_map_resource</code></td><td>dzdemo</td><td class="wrap">Harta pe care o editează <code>/mapeditor</code> (de ex. <code>oras_bohanx</code>).</td></tr>
+            <tr><td><code>gtab_map_autorestart</code></td><td>1</td><td class="wrap"><code>0</code> oprește repornirea automată a hărții după un export.</td></tr>
+            <tr><td><code>gtab_map_runtime_objects</code></td><td>1</td><td class="wrap"><code>0</code> nu mai creează prin script obiectele deja coapte în hartă.</td></tr>
+            <tr><td><code>gtab_map_generator_dir</code></td><td class="wrap">folderul generatorului</td><td class="wrap">Unde caută <code>/mapexport</code> scriptul de export.</td></tr>
           </tbody>
         </table>
       </div>

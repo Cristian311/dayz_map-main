@@ -93,7 +93,7 @@ pe unul te duce acolo. **Genereaza orasul** il construieste in Blender (`output\
 apoi **Blender** il deschide. Planurile `demo`, `bohan` (Bronx-ul din GTA IV) si `exemple\complet` (pod, lac,
 parc, parcare, bulevard cu mediana, deal) sunt exemple.
 
-**In joc (FiveM):** dupa Genereaza, butonul **FiveM** (sus) face resursa direct in `resources\[rrp]`, cu
+**In joc (FiveM):** dupa Genereaza, butonul **FiveM** (sus) face resursa direct in `resources\[gta_bucuresti]`, cu
 orasul mutat in ocean (in dreapta, cardul **In joc**: numele resursei, X / Y si cati metri sta deasupra marii;
 implicit X 6000, Y -2600, 25 m peste mare, ca valurile din larg sa nu treaca prin strazi; nu pune orasul la sud de
 Y -4000 langa X 4400..5200, acolo e insula Cayo Perico, incarcata mereu din build 2189, departe de Los Santos si de harta dzdemo). Apoi **Adauga ensure in server.cfg**

@@ -8,7 +8,7 @@ si sa le asezam corect pe loturi. Modulul asta tine "fisa tehnica" a fiecarui mo
 cat de mare e amprenta, cat e inalt, cat coboara sub 0, ce categorie/stil are.
 
 Cutiile (bbox) NU se pot ghici din numele modelului - se masoara in joc cu
-`GetModelDimensions` (vezi resursa rrp_mapeditor, comanda /catalogscan) sau se importa
+`GetModelDimensions` (vezi resursa mapeditor, comanda /catalogscan) sau se importa
 din XML-urile de .ytyp exportate cu CodeWalker (tools/import_ytyp_xml.py).
 
 Fisierul rezultat: dayzgen/data/catalog.json
@@ -242,7 +242,7 @@ class Catalog:
             if required:
                 raise FileNotFoundError(
                     f"Catalogul de arhetipuri lipseste: {target}\n"
-                    "Ruleaza /catalogscan in joc (rrp_mapeditor) sau "
+                    "Ruleaza /catalogscan in joc (mapeditor) sau "
                     "tools/import_ytyp_xml.py pe un export CodeWalker."
                 )
             return cls(path=target)

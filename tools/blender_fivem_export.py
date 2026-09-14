@@ -1316,7 +1316,7 @@ def run_export(opts: dict, log=print) -> dict:
                                       "models": {g["name"]: g["hash"] for g in groups.values()},
                                       "cells": cells_out, "tex": tex_sig}), encoding="utf-8")
     (res_dir / MARKER).write_text(time.strftime("%Y-%m-%d %H:%M:%S") + "\n", encoding="utf-8")
-    # ultimul: rrp_mapeditor il urmareste si reporneste harta in joc (fara reconectare)
+    # ultimul: mapeditor il urmareste si reporneste harta in joc (fara reconectare)
     (res_dir / "editor" / "export_done.json").write_text(json.dumps({
         "time": time.time(), "incremental": inc, "models": len(changed), "cells": len(composites),
         "seconds": round(time.time() - started, 1)}), encoding="utf-8")

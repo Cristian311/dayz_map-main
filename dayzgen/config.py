@@ -85,7 +85,7 @@ class MapConfig:
     minimap_px: int = 1024                 # latura imaginii puse pe radar / harta mare (overlay .gfx), max 4096
 
     # --- cai (folosite de studio / exportul de obiecte manuale) ---
-    fivem_resources_dir: str = r"C:\FXServer\server-data\resources\[rrp]"
+    fivem_resources_dir: str = r"C:\FXServer\server-data\resources\[gta_bucuresti]"
     custom_objects_file: str = "editor/objects.json"   # relativ la folderul resursei instalate
 
     def validate(self):
