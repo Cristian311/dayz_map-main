@@ -195,6 +195,7 @@ In radacina proiectului:
 | Fisier | Rol |
 |--------|-----|
 | `map_studio.py` / `MAP_STUDIO.bat` | interfata grafica (setari, previzualizare, generare, instalare) |
+| `EDITOR_ORAS.bat` | editorul de oras in browser: plan, generare Blender si export FiveM |
 | `export_custom_ymap.py` / `EXPORT_OBIECTE.bat` | export obiecte manuale -> `.ymap`, fara Blender |
 | `map.json` / `map.example.json` | setarile hartii |
 
@@ -354,6 +355,26 @@ In Blender (`BLENDER_EDITOR.bat`), fiecare entitate din `.ymap` e modelul real, 
 - exporti totul in FiveM cu panoul de mai jos.
 
 Strazile generate sunt deocamdata doar teren nivelat (fara asfalt si borduri).
+
+## Editorul de oras in browser
+
+`EDITOR_ORAS.bat` porneste editorul local in browser (implicit la `http://127.0.0.1:8765/`). Planurile se salveaza automat in
+`output\orase\<nume>.json`, asa ca poti inchide editorul si continua mai tarziu cu acelasi plan.
+
+Fluxul de lucru:
+
+1. Deschide `EDITOR_ORAS.bat` si alege un plan existent sau incepe unul nou.
+2. Deseneaza strazile si intersectiile, apoi adauga teren, zone si suprafete. Poti pune si cladiri sau props manual.
+3. Apasa **Genereaza orasul** pentru a construi planul in Blender.
+4. Foloseste **FiveM** pentru export sau **Trimite in joc** pentru generare si export catre resursa serverului.
+
+Editorul include vizualizari 2D si 3D, unelte pentru poduri si marcaje, selectie si mutare, iar panoul din dreapta arata
+statistici si detaliile elementului selectat. Pentru a modifica pozitia orasului in joc sau numele resursei FiveM, foloseste
+cardul **In joc** din editor. Prima instalare necesita adaugarea liniei `ensure <nume>` in `server.cfg` si repornirea serverului;
+prima trimitere completa in joc poate dura aproximativ 10 minute, iar actualizarile ulterioare pot fi trimise din editor.
+
+Planul si rezultatele generate se afla in `output\orase\`. Manualul cu uneltele, comenzile rapide, generarea si setarile serverului:
+[MANUAL_ORAS.html](MANUAL_ORAS.html).
 
 ## Harta facuta de mana in Blender (tab-ul Harta)
 
